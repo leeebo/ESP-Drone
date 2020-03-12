@@ -32,7 +32,7 @@
 #include "info.h"
 #include "version.h"
 #include "pm.h"
-#include "esp32_bridge.h"
+#include "stm32_legacy.h"
 
 //CPUID access
 static const unsigned int * CpuId = (unsigned int*)0x1FFFF7E8; 

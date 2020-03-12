@@ -33,7 +33,7 @@
 #ifdef STM32F40_41xxx
 #include "stm32f4xx.h"
 #else
-#include "esp32_bridge.h"//"stm32f10x.h"
+#include "stm32_legacy.h"//"stm32f10x.h"
 #ifndef SCB_ICSR_VECTACTIVE_Msk
 #define SCB_ICSR_VECTACTIVE_Msk 0x1FFUL
 #endif

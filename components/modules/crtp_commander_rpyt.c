@@ -31,7 +31,7 @@
 #include "param.h"
 #include "freertos/FreeRTOS.h"
 #include "num.h"
-#include "esp32_bridge.h"
+#include "stm32_legacy.h"
 
 #define MIN_THRUST  1000
 #define MAX_THRUST  60000

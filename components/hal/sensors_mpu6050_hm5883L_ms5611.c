@@ -24,7 +24,7 @@
 #include <math.h>
 #define DEBUG_MODULE "SENSORS"
 #include "sensors_mpu6050_hm5883L_ms5611.h"
-#include "esp32_bridge.h"
+#include "stm32_legacy.h"
 #include "driver/gpio.h"
 #include "i2cdev.h"
 
@@ -51,7 +51,7 @@
 #include "log.h"
 #include "debug_cf.h"
 #include "imu.h"
-// #include "nvicconf.h"
+ #include "nvicconf.h"
 #include "ledseq.h"
 #include "sound.h"
 #include "filter.h"

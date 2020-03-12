@@ -49,7 +49,7 @@ static void commanderCrtpCB(CRTPPacket* pk) //在CRTP_PORT_SETPOINT和CRTP_PORT_
 {
   static setpoint_t setpoint;
 
-  if(pk->port == CRTP_PORT_SETPOINT && pk->channel == 0) {
+  if(pk->port == CRTP_PORT_SETPOINT && pk->channel == 0) {  //command receive step 09
     crtpCommanderRpytDecodeSetpoint(&setpoint, pk);
     commanderSetSetpoint(&setpoint, COMMANDER_PRIORITY_CRTP);
     DEBUG_PRINTD("CRTP_PORT_SETPOINT");

@@ -60,7 +60,7 @@
 #include "extrx.h"
 
 #include "app.h"
-#include "esp32_bridge.h"
+#include "stm32_legacy.h"
 #include "debug_cf.h"
 
 /* Private variable */

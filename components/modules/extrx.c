@@ -26,8 +26,8 @@
 #include "freertos/task.h"
 #include "freertos/queue.h"
 
-//#include "stm32fxxx.h"
-#include "esp32_bridge.h"
+ 
+#include "stm32_legacy.h"
 #include "config.h"
 #include "system.h"
 #include "nvicconf.h"

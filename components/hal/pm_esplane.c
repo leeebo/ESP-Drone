@@ -23,7 +23,7 @@
 #include <string.h>
 #include <stdbool.h>
 #define DEBUG_MODULE "PM"
-#include "esp32_bridge.h"
+#include "stm32_legacy.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"

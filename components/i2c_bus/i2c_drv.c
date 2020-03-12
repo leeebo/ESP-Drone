@@ -1,7 +1,7 @@
 /**
+ * ESPlane Firmware
  * 
- *
- * Crazyflie 2.0 NRF Firmware
+ * Copyright 2019-2020  Espressif Systems (Shanghai) 
  * Copyright (c) 2014, Bitcraze AB, All rights reserved.
  *
  * This library is free software; you can redistribute it and/or
@@ -37,7 +37,7 @@
 #include "freertos/task.h"
 #include "freertos/queue.h"
 #include "freertos/semphr.h"
-#include "esp32_bridge.h"  
+#include "stm32_legacy.h"  
 // Application includes.
 #include "i2c_drv.h"
 #include "config.h"

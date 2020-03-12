@@ -57,7 +57,7 @@ such as: take-off, landing, polynomial trajectories.
 #include "log.h"
 #include "debug_cf.h"
 #include "param.h"
-#include "esp32_bridge.h"
+#include "stm32_legacy.h"
 #include "config.h"
 
 // Local types

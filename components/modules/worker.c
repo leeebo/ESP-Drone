@@ -30,7 +30,7 @@
 
 #include "console.h"
 
-#include "esp32_bridge.h"
+#include "stm32_legacy.h"
 
 #define WORKER_QUEUE_LENGTH 5
 

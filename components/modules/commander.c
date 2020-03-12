@@ -30,7 +30,7 @@
 #include "crtp_commander_high_level.h"
 
 #include "param.h"
-#include "esp32_bridge.h"
+#include "stm32_legacy.h"
 #include "debug_cf.h"
 
 
@@ -39,7 +39,7 @@ const static setpoint_t nullSetpoint;
 const static int priorityDisable = COMMANDER_PRIORITY_DISABLE;
 
 static uint32_t lastUpdate;
-static bool enableHighLevel = true;
+static bool enableHighLevel = false;
 
 static QueueHandle_t setpointQueue;
 static QueueHandle_t priorityQueue;
@@ -73,7 +73,7 @@ void commanderSetSetpoint(setpoint_t *setpoint, int priority)
     setpoint->timestamp = xTaskGetTickCount();
     DEBUG_PRINTD("commanderSetSetpoint");
     // This is a potential race but without effect on functionality
-    xQueueOverwrite(setpointQueue, setpoint);
+    xQueueOverwrite(setpointQueue, setpoint); //command receive step 10
     xQueueOverwrite(priorityQueue, &priority);
   }
 }
@@ -86,12 +86,12 @@ void commanderGetSetpoint(setpoint_t *setpoint, const state_t *state)
 
   if ((currentTime - setpoint->timestamp) > COMMANDER_WDT_TIMEOUT_SHUTDOWN) {
     if (enableHighLevel) {
-      crtpCommanderHighLevelGetSetpoint(setpoint, state);
+      crtpCommanderHighLevelGetSetpoint(setpoint, state);//这里可用于自动起飞，协议 8 端口
     }
     if (!enableHighLevel || crtpCommanderHighLevelIsStopped()) {//如果执行完，或者被屏蔽
       memcpy(setpoint, &nullSetpoint, sizeof(nullSetpoint));
     }
-  } else if ((currentTime - setpoint->timestamp) > COMMANDER_WDT_TIMEOUT_STABILIZE) {
+  } else if ((currentTime - setpoint->timestamp) > COMMANDER_WDT_TIMEOUT_STABILIZE) {//超过 2 秒无新指令，保持高度
     xQueueOverwrite(priorityQueue, &priorityDisable);
     // Leveling ...
     setpoint->mode.x = modeDisable;

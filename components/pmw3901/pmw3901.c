@@ -33,7 +33,7 @@
 #include "sleepus.h"
 #include "deck_digital.h"
 #include "deck_spi.h"
-#include "esp32_bridge.h"
+#include "stm32_legacy.h"
 
 
 static bool isInit = false;

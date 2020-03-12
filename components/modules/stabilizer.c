@@ -26,7 +26,7 @@
 
 #include "freertos/task.h"
 
-#include "esp32_bridge.h"
+#include "stm32_legacy.h"
 
 #include "system.h"
 #include "log.h"
@@ -271,7 +271,7 @@ static void stabilizerTask(void* param)
 
       stateEstimator(&state, &sensorData, &control, tick);//计算欧拉角和加速度
       compressState();//用于打log
-      commanderGetSetpoint(&setpoint, &state);//从CRTP获取一个目标point
+      commanderGetSetpoint(&setpoint, &state);//从CRTP获取一个目标point //command receive step 11
       compressSetpoint();//用于打log
 
       sitAwUpdateSetpoint(&setpoint, &sensorData, &state);//TODO:用于kalmanEstimator

@@ -30,7 +30,7 @@
 #include "freertos/task.h"
 #include "freertos/queue.h"
 
-#include "esp32_bridge.h"
+#include "stm32_legacy.h"
 #include "i2cdev.h"
 #include "i2c_drv.h"
 #include "nvicconf.h"

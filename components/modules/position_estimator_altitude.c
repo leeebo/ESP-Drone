@@ -26,7 +26,7 @@
 #include "param.h"
 #include "num.h"
 #include "position_estimator.h"
-#include "esp32_bridge.h"
+#include "stm32_legacy.h"
 
 #define G 9.81f;
 

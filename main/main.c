@@ -15,7 +15,7 @@
 #define DEBUG_MODULE "APP_MAIN"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "esp32_bridge.h"
+#include "stm32_legacy.h"
 #include "freertos/portmacro.h"
 #include "i2cdev.h"
 #include "platform.h"

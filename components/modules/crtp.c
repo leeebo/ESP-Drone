@@ -41,7 +41,7 @@
 #include "queuemonitor.h"
 #include "log.h"
 #include "debug_cf.h"
-#include "esp32_bridge.h"
+#include "stm32_legacy.h"
 
 
 static bool isInit;
@@ -181,7 +181,7 @@ void crtpRxTask(void *param)
       {
         if (queues[p.port])
         {
-          if (xQueueSend(queues[p.port], &p, 0) == errQUEUE_FULL)
+          if (xQueueSend(queues[p.port], &p, 0) == errQUEUE_FULL) //command receive step 08
           {
             // We should never drop packet
             ASSERT(0);

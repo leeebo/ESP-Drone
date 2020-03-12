@@ -32,7 +32,7 @@
 #include "crc.h"
 #include "console.h"
 #include "debug_cf.h"
-#include "esp32_bridge.h"
+#include "stm32_legacy.h"
 
 #if 0
 #define PARAM_DEBUG(fmt, ...) DEBUG_PRINTD("D/param " fmt, ## __VA_ARGS__)

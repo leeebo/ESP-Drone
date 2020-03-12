@@ -26,14 +26,14 @@
 #include "freertos/queue.h"
 #include "freertos/semphr.h"
 
-#include "esp32_bridge.h"
+#include "stm32_legacy.h"
 
 #include "config.h"
 //#include "nvic.h"
 #include "uart1.h"
 #include "cfassert.h"
 #include "config.h"
-//#include "nvicconf.h"
+ #include "nvicconf.h"
 
 /** This uart is conflicting with SPI2 DMA used in sensors_bmi088_spi_bmp388.c
  *  which is used in CF-RZR. So for other products this can be enabled.
@@ -94,16 +94,10 @@ bool uart1GetDataWithTimout(uint8_t *c)
 
 void uart1SendData(uint32_t size, uint8_t* data)
 {
- // uint32_t i;
-
   if (!isInit)
     return;
 //TODO:
-  // for(i = 0; i < size; i++)
-  // {
-  //   while (!(UART1_TYPE->SR & USART_FLAG_TXE));
-  //   UART1_TYPE->DR = (data[i] & 0x00FF);
-  // }
+
 }
 
 #ifdef ENABLE_UART1_DMA

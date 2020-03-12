@@ -29,7 +29,7 @@
 
 #include "driver/adc.h"
 #include "esp_adc_cal.h"
-#include "esp32_bridge.h"
+#include "stm32_legacy.h"
 
 static bool isInit;
 

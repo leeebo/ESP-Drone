@@ -32,7 +32,7 @@
 #include "crtp.h"
 #include "num.h"
 #include "quatcompress.h"
-#include "esp32_bridge.h"
+#include "stm32_legacy.h"
 
 /* The generic commander format contains a packet type and data that has to be
  * decoded into a setpoint_t structure. The aim is to make it future-proof

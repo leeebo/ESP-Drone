@@ -31,7 +31,7 @@
 #include "freertos/semphr.h"
 
 #include "led.h"
-#include "esp32_bridge.h"
+#include "stm32_legacy.h"
 
 #ifdef CALIBRATED_LED_MORSE
   #define DOT 100

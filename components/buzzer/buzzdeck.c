@@ -22,7 +22,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
-#include "esp32_bridge.h"
+#include "stm32_legacy.h"
 
 //#include "deck.h"
 #include "param.h"

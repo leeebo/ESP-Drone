@@ -18,7 +18,7 @@
 #include "lwip/api.h"
 #include "tcpip_adapter.h"
 #include "wifi_esp32.h"
-#include "esp32_bridge.h"
+#include "stm32_legacy.h"
 
 #define UDP_SERVER_PORT         2390  //remotPort=2399
 #define UDP_SERVER_PORT2        2392  //remotPort=2399

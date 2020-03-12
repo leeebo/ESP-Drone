@@ -5,7 +5,7 @@
 #include "freertos/semphr.h"
 #include "freertos/queue.h"
 
-#include "esp32_bridge.h" 
+#include "stm32_legacy.h" 
 #include "driver/i2c.h"
 
 #define I2C_NO_INTERNAL_ADDRESS   0xFFFF

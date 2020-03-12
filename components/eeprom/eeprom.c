@@ -17,7 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * @file eeprom.c
- * Driver for the 24AA64F eeprom.
+ * 使用 flash 分区代替 eeprom 保存数据，该部分需要检验，或替换成  NVS
  *
  */
 #define DEBUG_MODULE "EEPROM"

@@ -30,7 +30,7 @@
 #include "param.h"
 
 #include "sysload.h"
-#include "esp32_bridge.h"
+#include "stm32_legacy.h"
 
 #define TIMER_PERIOD M2T(6000)
 

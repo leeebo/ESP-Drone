@@ -37,7 +37,7 @@
 #include "freertos/semphr.h"
 
 #include "wifi_esp32.h"
-#include "esp32_bridge.h"
+#include "stm32_legacy.h"
 #include "debug_cf.h"
 
 #define WIFI_ACTIVITY_TIMEOUT_MS (1000)

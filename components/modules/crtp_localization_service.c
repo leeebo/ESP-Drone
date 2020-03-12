@@ -39,7 +39,7 @@
 
 #include "estimator.h"
 #include "quatcompress.h"
-#include "esp32_bridge.h"
+#include "stm32_legacy.h"
 
 #define NBR_OF_RANGES_IN_PACKET   5
 #define DEFAULT_EMERGENCY_STOP_TIMEOUT (1 * RATE_MAIN_LOOP)

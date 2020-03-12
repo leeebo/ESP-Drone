@@ -62,7 +62,7 @@
 
 
 //#include "stm32f4xx.h"
-#include "esp32_bridge.h"
+#include "stm32_legacy.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"

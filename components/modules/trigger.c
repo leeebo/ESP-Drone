@@ -22,8 +22,8 @@
 
 #include <stddef.h>
 #include <stdlib.h>
-//#include "stm32fxxx.h"
-#include "esp32_bridge.h"
+ 
+#include "stm32_legacy.h"
 #include "trigger.h"
 
 /**

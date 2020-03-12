@@ -24,7 +24,7 @@
 
 #include <stdbool.h>
 
-#include "esp32_bridge.h"
+#include "stm32_legacy.h"
 
 #include "piezo.h"
 #include "motors.h"

@@ -35,7 +35,7 @@
 #include "log.h"
 #include "sound.h"
 #include "buzzer.h"
-#include "esp32_bridge.h"
+#include "stm32_legacy.h"
 
 /**
  * Credit to http://tny.cz/e525c1b2 for supplying the tones

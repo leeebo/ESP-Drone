@@ -44,7 +44,7 @@
 #include "console.h"
 #include "cfassert.h"
 #include "debug_cf.h"
-#include "esp32_bridge.h"
+#include "stm32_legacy.h"
 
 #if 0
 #define LOG_DEBUG(fmt, ...) DEBUG_PRINTD("D/log " fmt, ## __VA_ARGS__)

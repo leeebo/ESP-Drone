@@ -26,7 +26,7 @@
 #include "freertos/task.h"
 #include "driver/gpio.h"
 #include "led.h"
-#include "esp32_bridge.h"
+#include "stm32_legacy.h"
 
 static unsigned int led_pin[] =
 {

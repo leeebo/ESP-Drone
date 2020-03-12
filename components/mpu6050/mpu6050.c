@@ -29,8 +29,7 @@
  */
 #define DEBUG_MODULE "MPU6050"
 
-//#include "stm32fxxx.h"
-#include "esp32_bridge.h"   //需要替换
+#include "stm32_legacy.h"   
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
