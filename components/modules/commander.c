@@ -26,7 +26,7 @@
 #include "freertos/queue.h"
 
 #include "commander.h"
-#include "crtp_commander.h"  //crtp protocol
+#include "crtp_commander.h" 
 #include "crtp_commander_high_level.h"
 
 #include "param.h"
@@ -72,8 +72,9 @@ void commanderSetSetpoint(setpoint_t *setpoint, int priority)
   if (priority >= currentPriority) {
     setpoint->timestamp = xTaskGetTickCount();
     DEBUG_PRINTD("commanderSetSetpoint");
-    // This is a potential race but without effect on functionality
-    xQueueOverwrite(setpointQueue, setpoint); //command receive step 10
+    //command step - receive  10 forward to setpointQueue, waitting for the command execution
+    //This is a potential race but without effect on functionality
+    xQueueOverwrite(setpointQueue, setpoint);
     xQueueOverwrite(priorityQueue, &priority);
   }
 }
@@ -86,12 +87,12 @@ void commanderGetSetpoint(setpoint_t *setpoint, const state_t *state)
 
   if ((currentTime - setpoint->timestamp) > COMMANDER_WDT_TIMEOUT_SHUTDOWN) {
     if (enableHighLevel) {
-      crtpCommanderHighLevelGetSetpoint(setpoint, state);//这里可用于自动起飞，协议 8 端口
+      crtpCommanderHighLevelGetSetpoint(setpoint, state);//PORT 8: CRTP_PORT_SETPOINT_HL, contains auto fly, ect.
     }
-    if (!enableHighLevel || crtpCommanderHighLevelIsStopped()) {//如果执行完，或者被屏蔽
+    if (!enableHighLevel || crtpCommanderHighLevelIsStopped()) {//if HighLevel command is allowed
       memcpy(setpoint, &nullSetpoint, sizeof(nullSetpoint));
     }
-  } else if ((currentTime - setpoint->timestamp) > COMMANDER_WDT_TIMEOUT_STABILIZE) {//超过 2 秒无新指令，保持高度
+  } else if ((currentTime - setpoint->timestamp) > COMMANDER_WDT_TIMEOUT_STABILIZE) {//No new command after 2 seconds, maintain altitude
     xQueueOverwrite(priorityQueue, &priorityDisable);
     // Leveling ...
     setpoint->mode.x = modeDisable;

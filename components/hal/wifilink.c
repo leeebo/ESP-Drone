@@ -94,18 +94,18 @@ static void wifilinkTask(void *param)
 {
   while(1)
   {
-    // Fetch a wifi packet off the queue
-    wifiGetDataBlocking(&wifiIn);//command receive step 03
+    // command step - receive  03 Fetch a wifi packet off the queue
+    wifiGetDataBlocking(&wifiIn);
     lastPacketTick = xTaskGetTickCount();
-#ifdef FIT_EP10_APP
+#ifdef CONFIG_ENABLE_LEGACY_APP
     if(detectOldVersionApp(&wifiIn)){
 
       rch  = (1.0)*(float)(((((uint16_t)wifiIn.data[1]<<8)+(uint16_t)wifiIn.data[2])-296)*15.0/150.0); //-15~+15
       pch  = (-1.0)*(float)(((((uint16_t)wifiIn.data[3]<<8)+(uint16_t)wifiIn.data[4])-296)*15.0/150.0);//-15~+15
       tch  = (((uint16_t)wifiIn.data[5]<<8)+(uint16_t)wifiIn.data[6])*59000.0/600.0;
       ych  = (float)(((((uint16_t)wifiIn.data[7]<<8)+(uint16_t)wifiIn.data[8])-296)*15.0/150.0);//-15~+15
-      p.size = wifiIn.size + 1 ; //把cksum字节加上
-      p.header = CRTP_HEADER(CRTP_PORT_SETPOINT, 0x00); //重新定义头
+      p.size = wifiIn.size + 1 ; //add cksum size
+      p.header = CRTP_HEADER(CRTP_PORT_SETPOINT, 0x00); //head redefine
       
       memcpy(&p.data[0], &rch, 4);
       memcpy(&p.data[4], &pch, 4);  
@@ -115,19 +115,20 @@ static void wifilinkTask(void *param)
     }else
 #endif
     {
-      p.size = wifiIn.size - 1;//CRTP中的size是去掉head的大小
-      memcpy(&p.raw, wifiIn.data, wifiIn.size);  //command receive step 04
+      //command step - receive  04 copy CRTP part from packet, the size not contain head
+      p.size = wifiIn.size - 1;
+      memcpy(&p.raw, wifiIn.data, wifiIn.size);  
     }
     
-    // This queuing will copy a CRTP packet size from wifiIn
-    xQueueSend(crtpPacketDelivery, &p, 0) ; //command receive step 05
+    //command step - receive 05 send to crtpPacketDelivery queue
+    xQueueSend(crtpPacketDelivery, &p, 0) ; 
   }
 
 }
 
 static int wifilinkReceiveCRTPPacket(CRTPPacket *p)
 {
-  if (xQueueReceive(crtpPacketDelivery, p, M2T(100)) == pdTRUE) //command receive step 06
+  if (xQueueReceive(crtpPacketDelivery, p, M2T(100)) == pdTRUE) 
   {
     ledseqRun(LINK_LED, seq_linkup);
     DEBUG_PRINTD("3.wifilinkReceiveCRTPPacket got data size = %d",p->size);

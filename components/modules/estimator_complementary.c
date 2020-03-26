@@ -66,13 +66,17 @@ bool estimatorComplementaryTest(void)
 
 void estimatorComplementary(state_t *state, sensorData_t *sensorData, control_t *control, const uint32_t tick)
 {
+   //estimate step 01-get data from sensors data queue
   sensorsAcquire(sensorData, tick); // Read sensors at full rate (1000Hz)
+  //estimate step 02-update attitude at 250Hz
   if (RATE_DO_EXECUTE(ATTITUDE_UPDATE_RATE, tick)) {
+    //estimate step 2.1-update quaternion
     sensfusion6UpdateQ(sensorData->gyro.x, sensorData->gyro.y, sensorData->gyro.z,
                        sensorData->acc.x, sensorData->acc.y, sensorData->acc.z,
                        ATTITUDE_UPDATE_DT);
 
     // Save attitude, adjusted for the legacy CF2 body coordinate system
+      //estimate step 2.2-Euler angles are calculated from quaternions
     sensfusion6GetEulerRPY(&state->attitude.roll, &state->attitude.pitch, &state->attitude.yaw);
 
     // Save quaternion, hopefully one day this could be used in a better controller.
@@ -89,7 +93,7 @@ void estimatorComplementary(state_t *state, sensorData_t *sensorData, control_t 
 
     positionUpdateVelocity(state->acc.z, ATTITUDE_UPDATE_DT);
   }
-
+//estimate step 03-update position at 100Hz
   if (RATE_DO_EXECUTE(POS_UPDATE_RATE, tick)) {
     tofMeasurement_t tofMeasurement;
 

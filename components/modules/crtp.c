@@ -87,7 +87,7 @@ void crtpInit(void)
 
   txQueue = xQueueCreate(CRTP_TX_QUEUE_SIZE, sizeof(CRTPPacket));
   DEBUG_QUEUE_MONITOR_REGISTER(txQueue);
- //协议层的接收和发送
+ //CRTP protocol layer receive and send
   xTaskCreate(crtpTxTask, CRTP_TX_TASK_NAME,
               CRTP_TX_TASK_STACKSIZE, NULL, CRTP_TX_TASK_PRI, NULL);
   xTaskCreate(crtpRxTask, CRTP_RX_TASK_NAME,
@@ -177,17 +177,19 @@ void crtpRxTask(void *param)
   {
     if (link != &nopLink)
     {
-      if (!link->receivePacket(&p))  //command receive step 07
+       //command step - receive  06 from  crtpPacketDelivery queue
+      if (!link->receivePacket(&p))  
       {
+        //command step - receive  07 forward to registered port
         if (queues[p.port])
         {
-          if (xQueueSend(queues[p.port], &p, 0) == errQUEUE_FULL) //command receive step 08
+          if (xQueueSend(queues[p.port], &p, 0) == errQUEUE_FULL) 
           {
             // We should never drop packet
             ASSERT(0);
           }          
         }
-
+        //command step - receive  08  callback  registered function
         if (callbacks[p.port])
         {
           callbacks[p.port](&p);

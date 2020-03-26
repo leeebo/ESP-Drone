@@ -238,16 +238,16 @@ static void sensorsTask(void *param)
 
     while (1)
     {
-        if (pdTRUE == xSemaphoreTake(sensorsDataReady, portMAX_DELAY)) //from interrupt
+            // mpu6050 INT pin: data is ready to be read
+        if (pdTRUE == xSemaphoreTake(sensorsDataReady, portMAX_DELAY))
         {
             sensorData.interruptTimestamp = imuIntTimestamp;
-            // data is ready to be read
+            //sensors step 1-read data from I2C
             uint8_t dataLen = (uint8_t)(SENSORS_MPU6050_BUFF_LEN +
                                         (isMagnetometerPresent ? SENSORS_MAG_BUFF_LEN : 0) +
                                         (isBarometerPresent ? SENSORS_BARO_BUFF_LEN : 0));
-
             i2cdevReadReg8(I2C0_DEV, MPU6050_ADDRESS_AD0_LOW, MPU6050_RA_ACCEL_XOUT_H, dataLen, buffer);
-            // these functions process the respective data and queue it on the output queues
+            // sensors step 2-process the respective data
             processAccGyroMeasurements(&(buffer[0]));
             if (isMagnetometerPresent)
             {
@@ -257,7 +257,7 @@ static void sensorsTask(void *param)
             {
                 processBarometerMeasurements(&(buffer[isMagnetometerPresent ? SENSORS_MPU6050_BUFF_LEN + SENSORS_MAG_BUFF_LEN : SENSORS_MPU6050_BUFF_LEN]));
             }
-
+            // sensors step 3- queue sensors data  on the output queues
             xQueueOverwrite(accelerometerDataQueue, &sensorData.acc);
             xQueueOverwrite(gyroDataQueue, &sensorData.gyro);
             if (isMagnetometerPresent)
@@ -269,7 +269,7 @@ static void sensorsTask(void *param)
                 xQueueOverwrite(barometerDataQueue, &sensorData.baro);
             }
                        
-            // Unlock stabilizer task
+            // sensors step 4- Unlock stabilizer task
             xSemaphoreGive(dataReady);
 #ifdef DEBUG_EP2
       DEBUG_PRINTD("ax = %f,  ay = %f,  az = %f,  gx = %f,  gy = %f,  gz = %f , hx = %f , hy = %f, hz =%f \n", sensorData.acc.x, sensorData.acc.y, sensorData.acc.z, sensorData.gyro.x, sensorData.gyro.y, sensorData.gyro.z, sensorData.mag.x, sensorData.mag.y, sensorData.mag.z);
@@ -327,6 +327,7 @@ void processAccGyroMeasurements(const uint8_t *buffer)
 {
     Axis3f accScaled;
     // Note the ordering to correct the rotated 90º IMU coordinate system ESPlane modify this problem
+    //sensors step 2.1 read from buffer
     accelRaw.x = (((int16_t)buffer[0]) << 8) | buffer[1];
     accelRaw.y = (((int16_t)buffer[2]) << 8) | buffer[3];
     accelRaw.z = (((int16_t)buffer[4]) << 8) | buffer[5];
@@ -337,21 +338,25 @@ void processAccGyroMeasurements(const uint8_t *buffer)
 #ifdef GYRO_BIAS_LIGHT_WEIGHT
     gyroBiasFound = processGyroBiasNoBuffer(gyroRaw.x, gyroRaw.y, gyroRaw.z, &gyroBias);
 #else
+    //sensors step 2.2 Calculates the gyro bias first when the  variance is below threshold
     gyroBiasFound = processGyroBias(gyroRaw.x, gyroRaw.y, gyroRaw.z, &gyroBias);
 #endif
+    //sensors step 2.3 Calculates the acc scale when platform is steady
     if (gyroBiasFound)
     {
         processAccScale(accelRaw.x, accelRaw.y, accelRaw.z);
     }
-
+    //sensors step 2.4 convert  digtal value to physical angle
     sensorData.gyro.x = (gyroRaw.x - gyroBias.x) * SENSORS_DEG_PER_LSB_CFG;
     sensorData.gyro.y = (gyroRaw.y - gyroBias.y) * SENSORS_DEG_PER_LSB_CFG;
     sensorData.gyro.z = (gyroRaw.z - gyroBias.z) * SENSORS_DEG_PER_LSB_CFG;
+    //sensors step 2.5 low pass filter
     applyAxis3fLpf((lpf2pData *)(&gyroLpf), &sensorData.gyro);
 
     accScaled.x = (accelRaw.x) * SENSORS_G_PER_LSB_CFG / accScale;
     accScaled.y = (accelRaw.y) * SENSORS_G_PER_LSB_CFG / accScale;
     accScaled.z = (accelRaw.z) * SENSORS_G_PER_LSB_CFG / accScale;
+    //sensors step 2.6 Compensate for a miss-aligned accelerometer.
     sensorsAccAlignToGravity(&accScaled, &sensorData.acc);
     applyAxis3fLpf((lpf2pData *)(&accLpf), &sensorData.acc);
 }

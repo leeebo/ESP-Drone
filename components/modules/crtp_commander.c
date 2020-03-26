@@ -44,12 +44,12 @@ void crtpCommanderInit(void) //在commanderInit时，调用crtpCommanderInit
   isInit = true;
 }
 
-
-static void commanderCrtpCB(CRTPPacket* pk) //在CRTP_PORT_SETPOINT和CRTP_PORT_SETPOINT_GENERIC包到达时，调用这个回调函数
+//command step - receive  09 callback function of port CRTP_PORT_SETPOINT and CRTP_PORT_SETPOINT_GENERIC
+static void commanderCrtpCB(CRTPPacket* pk) 
 {
   static setpoint_t setpoint;
 
-  if(pk->port == CRTP_PORT_SETPOINT && pk->channel == 0) {  //command receive step 09
+  if(pk->port == CRTP_PORT_SETPOINT && pk->channel == 0) {
     crtpCommanderRpytDecodeSetpoint(&setpoint, pk);
     commanderSetSetpoint(&setpoint, COMMANDER_PRIORITY_CRTP);
     DEBUG_PRINTD("CRTP_PORT_SETPOINT");

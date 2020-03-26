@@ -253,10 +253,11 @@ static void stabilizerTask(void* param)
       testState = configureAcc;
       startPropTest = false;
     }
-
-    if (testState != testDone) {//默认不测量
-      sensorsAcquire(&sensorData, tick);//取传感器测量值
-      testProps(&sensorData);//测试螺旋桨带来的震动是否在允许范围
+    //default no test
+    if (testState != testDone) {
+      //test whether propeller vibration is in the allowable range
+      sensorsAcquire(&sensorData, tick);//get sensors data before test
+      testProps(&sensorData);//start test
     } else {
       // allow to update estimator dynamically
       if (getStateEstimator() != estimatorType) {
@@ -268,13 +269,14 @@ static void stabilizerTask(void* param)
         controllerInit(controllerType);
         controllerType = getControllerType();
       }
+     //estimate drone state use sensors data
+      stateEstimator(&state, &sensorData, &control, tick);
+      compressState();//for log
+      //command step - receive  11 get target value from setpointQueue
+      commanderGetSetpoint(&setpoint, &state);
+      compressSetpoint();//for log
 
-      stateEstimator(&state, &sensorData, &control, tick);//计算欧拉角和加速度
-      compressState();//用于打log
-      commanderGetSetpoint(&setpoint, &state);//从CRTP获取一个目标point //command receive step 11
-      compressSetpoint();//用于打log
-
-      sitAwUpdateSetpoint(&setpoint, &sensorData, &state);//TODO:用于kalmanEstimator
+      sitAwUpdateSetpoint(&setpoint, &sensorData, &state);//TODO:for kalmanEstimator
 
       controller(&control, &setpoint, &sensorData, &state, tick);
 
@@ -293,7 +295,8 @@ static void stabilizerTask(void* param)
       //   usddeckTriggerLogging();
       // }
     }
-    calcSensorToOutputLatency(&sensorData);//用于计算sensors中断产生到完成一次计算循环的时间
+    //counting the time until a cycle is completed
+    calcSensorToOutputLatency(&sensorData);
     tick++;
     STATS_CNT_RATE_EVENT(&stabilizerRate);
   }

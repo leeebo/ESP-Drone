@@ -57,7 +57,7 @@ void commInit(void)
     platformserviceInit();
     logInit();
     paramInit();
-    locSrvInit();
+    //locSrvInit();
     isInit = true;
 }
 

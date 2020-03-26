@@ -17,7 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  * 
- * 用于飞控与本地外围模块通信：包括外部定位模块
  *
  */
 #include <string.h>
@@ -93,11 +92,12 @@ static uint8_t my_id;
 static uint16_t tickOfLastPacket; // tick when last packet was received
 
 static void locSrvCrtpCB(CRTPPacket* pk);
-static void extPositionHandler(CRTPPacket* pk);//外部定位系统发来的包，用于增强卡尔曼滤波
-static void genericLocHandle(CRTPPacket* pk);//LPP Short packet tunnel 和紧急停止通道
-static void extPositionPackedHandler(CRTPPacket* pk);//文档中还未定义该通道
+static void extPositionHandler(CRTPPacket* pk);//package from an external positioning system to enhance kalman filtering
+static void genericLocHandle(CRTPPacket* pk);//LPP Short packet tunnel and emergency stop
+static void extPositionPackedHandler(CRTPPacket* pk);//undefined
 
-void locSrvInit()//注册CRTP_PORT_LOCALIZATION端口，并设置回到函数
+//Register the CRTP_PORT_LOCALIZATION port and set the callback function
+void locSrvInit()
 {
   if (isInit) {
     return;

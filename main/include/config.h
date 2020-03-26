@@ -45,10 +45,8 @@
 
 #define PROTOCOL_VERSION 4
 #define QUAD_FORMATION_X
-//#define FIT_EP10_APP
 //#define DEBUG_UDP
 
-//#define UARTSLK
 //#define BUZZER_ON
 
 #ifdef STM32F4XX

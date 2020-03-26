@@ -3,11 +3,11 @@
 
 ## ESPlane2.0
 
-**Drones powered by ESP32&ESP\_IDF&Crazyfile**
+**Drones powered by ESP32&ESP\_IDF&Crazyflie**
 
 ### 一、简介
 
-ESPlane2.0将以Crazyfile2.0工程为移植对象，该工程具有较为科学和完善的代码架构，在稳定性和可扩展性上具有很大的优势，源代码使用GPL3.0开源协议，在修改后保证开源可以用于商业用途。ESPlane将保持Crazyfile姿态计算，控制算法等关键代码，结合ESP32和ESP\_IDF特点，使其能够在单颗ESP32芯片上运行，并具有WiFi控制，自动组网等功能。
+ESPlane2.0将以Crazyflie2.0工程为移植对象，该工程具有较为科学和完善的代码架构，在稳定性和可扩展性上具有很大的优势，源代码使用GPL3.0开源协议，在修改后保证开源可以用于商业用途。ESPlane将保持Crazyflie姿态计算，控制算法等关键代码，结合ESP32和ESP\_IDF特点，使其能够在单颗ESP32芯片上运行，并具有WiFi控制，自动组网等功能。
 
 项目wiki：[https://qljz1993.gitbook.io/esplane/](https://qljz1993.gitbook.io/esplane/)
 
@@ -101,7 +101,7 @@ ESPlane2.0将以Crazyfile2.0工程为移植对象，该工程具有较为科学�
 
 ### 感谢/THANKS
 
-1. 感谢Bitcraze开源组织提供很棒的[crazyfile](https://www.bitcraze.io/%20)无人机项目代码
+1. 感谢Bitcraze开源组织提供很棒的[Crazyflie](https://www.bitcraze.io/%20)无人机项目代码
 2. 感谢Espressif提供ESP32和[ESP\_IDF操作系统](https://docs.espressif.com/projects/esp-idf/en/latest/index.html)
 3. 感谢WhyEngineer提供的stm32 dsp移植库[esp\_dsp](https://github.com/whyengineer/esp32-lin/tree/master/components/dsp_lib)
 

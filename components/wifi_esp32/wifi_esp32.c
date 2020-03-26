@@ -20,8 +20,8 @@
 #include "wifi_esp32.h"
 #include "stm32_legacy.h"
 
-#define UDP_SERVER_PORT         2390  //remotPort=2399
-#define UDP_SERVER_PORT2        2392  //remotPort=2399
+#define UDP_SERVER_PORT         2390
+#define UDP_SERVER_PORT2        2392
 #define UDP_REMOTE_PORT         2399
 #define UDP_REMOTE_ADDR         "192.168.43.43"
 #define UDP_SERVER_RX_BUFSIZE   128
@@ -82,8 +82,8 @@ bool wifiTest(void)
 
 bool wifiGetDataBlocking(UDPPacket *in)
 {
-
-    while (xQueueReceive(udpDataRx, in, portMAX_DELAY) != pdTRUE){ //command receive step 02
+   //command step - receive  02  from udp rx queue
+    while (xQueueReceive(udpDataRx, in, portMAX_DELAY) != pdTRUE){
         //vTaskDelay(20);
     }; // Don't return until we get some data on the UDP
     return true;
@@ -111,9 +111,10 @@ static esp_err_t udp_server_create(void *arg)
         netconn_close(udp_server_netconn);
         netconn_delete(udp_server_netconn);
         return ESP_FAIL;
+  
     }
-
-    /*udp_server_netconn2 = netconn_new(NETCONN_UDP);  //创建socket
+#ifdef CONFIG_ENABLE_LEGACY_APP
+    udp_server_netconn2 = netconn_new(NETCONN_UDP);  //创建socket
     udp_server_netconn2->recv_timeout = 10;
     if(udp_server_netconn2 == NULL) return ESP_FAIL;
 
@@ -123,21 +124,21 @@ static esp_err_t udp_server_create(void *arg)
         netconn_close(udp_server_netconn2);
         netconn_delete(udp_server_netconn2);
         return ESP_FAIL;
-    }*/
+    }
+#endif
 
     return ESP_OK;
 }
 
-//static uint32_t remote_addr;
 static void udp_server_rx_task(void *pvParameters)
 {
     struct pbuf *q = NULL;
     
     uint8_t cksum = 0;
     struct netbuf *recvbuf = NULL;
-    //char recvbuffTemp[64] = {0};
     while (true)
     {
+        //command step - receive  01 from Wi-Fi UDP
         if (netconn_recv(udp_server_netconn, &recvbuf) == ERR_OK)
         {
             for (q = recvbuf->p; q != NULL; q = q->next)
@@ -149,11 +150,14 @@ static void udp_server_rx_task(void *pvParameters)
                 }
                 else
                 {
-                    memcpy(inPacket.data, q->payload, q->len); //一部分数据
+                    //copy part of the UDP packet
+                    memcpy(inPacket.data, q->payload, q->len);
                     cksum = inPacket.data[q->len - 1];
-                    inPacket.size = q->len - 1; //去掉cksum,不属于CRTP
+                    //remove cksum, do not belong to CRTP
+                    inPacket.size = q->len - 1; 
+                    //check packet
                     if(cksum == calculate_cksum(inPacket.data,q->len - 1)){
-                        xQueueSend(udpDataRx, &inPacket, M2T(2)); //command receive step 01
+                        xQueueSend(udpDataRx, &inPacket, M2T(2)); 
                     }else{
                         DEBUG_PRINTW( "udp packet cksum unmatched");
                     }
@@ -174,14 +178,12 @@ static void udp_server_rx_task(void *pvParameters)
     vTaskDelete(NULL);
 }
 
-//static uint32_t remote_addr;
 static void udp_server_rx2_task(void *pvParameters)
 {
     struct pbuf *q = NULL;
 
     uint8_t cksum = 0;
     struct netbuf *recvbuf = NULL;
-    //char recvbuffTemp[64] = {0};
     while (true)
     {
         if (netconn_recv(udp_server_netconn2, &recvbuf) == ERR_OK)
@@ -194,9 +196,9 @@ static void udp_server_rx2_task(void *pvParameters)
                 }
                 else
                 {
-                    memcpy(inPacket2.data, q->payload, q->len); //一部分数据
+                    memcpy(inPacket2.data, q->payload, q->len);
                     cksum = inPacket2.data[q->len - 1];
-                    inPacket2.size = q->len - 1; //去掉cksum,不属于CRTP
+                    inPacket2.size = q->len - 1;
                     xQueueSend(udpDataRx, &inPacket2, 0);
 #ifdef DEBUG_UDP
                     DEBUG_PRINT_LOCAL( "1.Received data LENGTH = %d  %02X \n cksum = %02X",q->len,inPacket2.data[0],cksum); 
@@ -220,10 +222,9 @@ static void udp_server_tx_task(void *pvParameters)
     portBASE_TYPE xTaskWokenByReceive = pdFALSE;
     while (TRUE)
     {
-        //发送数据
         if (xQueueReceive(udpDataTx, &outPacket, &xTaskWokenByReceive) == pdTRUE)
         {
-            memcpy(sendbuffTemp, outPacket.data, outPacket.size); //一部分数据
+            memcpy(sendbuffTemp, outPacket.data, outPacket.size);
             sendbuffTemp[outPacket.size + 1] = '\0';
 #ifdef DEBUG_UDP
             DEBUG_PRINTD("udpDataTx get QUEUE size = %d data = %02x",outPacket.size,outPacket.data[0]);
@@ -311,7 +312,9 @@ void wifiInit(void)
         DEBUG_PRINT_LOCAL( "UDP server create socket succeed!!!");
         xTaskCreate(udp_server_tx_task, UDP_TX_TASK_NAME, UDP_TX_TASK_STACKSIZE, NULL, UDP_TX_TASK_PRI, NULL);
         xTaskCreate(udp_server_rx_task, UDP_RX_TASK_NAME, UDP_RX_TASK_STACKSIZE, NULL, UDP_RX_TASK_PRI, NULL);
-        //xTaskCreate(udp_server_rx2_task, UDP_RX2_TASK_NAME, UDP_RX2_TASK_STACKSIZE, NULL, UDP_RX2_TASK_PRI, NULL);
+#ifdef CONFIG_ENABLE_LEGACY_APP
+        xTaskCreate(udp_server_rx2_task, UDP_RX2_TASK_NAME, UDP_RX2_TASK_STACKSIZE, NULL, UDP_RX2_TASK_PRI, NULL);
+ #endif
         isInit = true;   
     }
 

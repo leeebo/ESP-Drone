@@ -1,54 +1,61 @@
-menu "ESPlane2.0 Configuration"
-    config PITCH_CALIB
-        int "PITCH_CALIB deg*100"
-        range -200 200
-        default 0
+menu "ESPlane2.0 config"
+    config ENABLE_LEGACY_APP
+        bool "Enable legacy ESPlane1.0 APP"
         help
-            if PITCH error angle is 0.90,set this 90
+            This enables the udp_server_rx2_task of wifi_esp32.
+    menu "calibration angle"
+        config PITCH_CALIB
+            int "PITCH_CALIB deg*100"
+            range -200 200
+            default 0
+            help
+                if PITCH error angle is 0.90,set this 90
 
-    config ROLL_CALIB
-        int "ROLL_CALIB deg*100"
-        range -200 200 
-        default 0
-        help
-            if ROLL error angle is 0.90,set this 90
+        config ROLL_CALIB
+            int "ROLL_CALIB deg*100"
+            range -200 200 
+            default 0
+            help
+                if ROLL error angle is 0.90,set this 90
+    endmenu
 
-    config I2C0_PIN_SDA
-        int "I2C0_PIN_SDA GPIO number"
-        range 0 34
-        default 21
-        help
-            GPIO number (IOxx) I2C0_PIN_SDA
-            Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used to blink.
-            GPIOs 35-39 are input-only so cannot be used as outputs.
+    menu "IO config"
+        config I2C0_PIN_SDA
+            int "I2C0_PIN_SDA GPIO number"
+            range 0 34
+            default 21
+            help
+                GPIO number (IOxx) I2C0_PIN_SDA
+                Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used to blink.
+                GPIOs 35-39 are input-only so cannot be used as outputs.
 
-    config I2C0_PIN_SCL
-        int "I2C0_PIN_SCL GPIO number"
-        range 0 34
-        default 22
-        help
-            GPIO number (IOxx) I2C0_PIN_SCL
-            Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used to blink.
-            GPIOs 35-39 are input-only so cannot be used as outputs.
-    
-    config I2C1_PIN_SDA
-        int "I2C1_PIN_SDA GPIO number"
-        range 0 34
-        default 16
-        help
-            GPIO number (IOxx) I2C1_PIN_SDA
-            Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used to blink.
-            GPIOs 35-39 are input-only so cannot be used as outputs.
+        config I2C0_PIN_SCL
+            int "I2C0_PIN_SCL GPIO number"
+            range 0 34
+            default 22
+            help
+                GPIO number (IOxx) I2C0_PIN_SCL
+                Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used to blink.
+                GPIOs 35-39 are input-only so cannot be used as outputs.
+        
+        config I2C1_PIN_SDA
+            int "I2C1_PIN_SDA GPIO number"
+            range 0 34
+            default 16
+            help
+                GPIO number (IOxx) I2C1_PIN_SDA
+                Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used to blink.
+                GPIOs 35-39 are input-only so cannot be used as outputs.
 
-    config I2C1_PIN_SCL
-        int "I2C1_PIN_SCL GPIO number"
-        range 0 34
-        default 17
-        help
-            GPIO number (IOxx) I2C1_PIN_SCL
-            Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used to blink.
-            GPIOs 35-39 are input-only so cannot be used as outputs.            
-              
+        config I2C1_PIN_SCL
+            int "I2C1_PIN_SCL GPIO number"
+            range 0 34
+            default 17
+            help
+                GPIO number (IOxx) I2C1_PIN_SCL
+                Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used to blink.
+                GPIOs 35-39 are input-only so cannot be used as outputs.            
+    endmenu          
 
 
 endmenu
