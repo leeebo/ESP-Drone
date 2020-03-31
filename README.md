@@ -6,17 +6,17 @@
 
 ### Introduction
 
-**ESPlane2.0** is a open source **drone solution** based on espressif **ESP32** Wi-Fi chip, which can be controlled through **Wi-Fi** network using mobile APP or gamepad. ESPlane2.0 supports multiple fly modes, `stabilize`, `height-hold`, `position-hold` and more. ESPlane2.0 solution has **simple hardware** structure,**clear and extendible code architecture**, can be used in STEAM education and other fields. The main code ported from **Crazyflie** open source project, using the **GPL3.0** open source protocol.
+**ESPlane2.0** is an open source **drone solution** based on espressif **ESP32** Wi-Fi chip, which can be controlled through **Wi-Fi** network using mobile APP or gamepad. ESPlane2.0 supports multiple fly modes, `stabilize`, `height-hold`, `position-hold` and more. ESPlane2.0 solution has **simple hardware structure**,**clear and extendible code architecture**, can be used in **STEAM education** and other fields. The main code ported from **Crazyflie** open source project, using the **GPL3.0** open source protocol.
 
-**For user**: [01-ESPlane2.0 Operate Guide](esplane2.0-kai-fa-bi-ji/00esplane-shang-wei-ji-an-zhuang-zhi-yin.md)
+**For User**: [01-ESPlane2.0 Operate Guide](esplane2.0-kai-fa-bi-ji/00esplane-shang-wei-ji-an-zhuang-zhi-yin.md)
 
-**For developer**: [01-ESPlane2.0 Develop Guide](esplane2.0-kai-fa-bi-ji/00esplane-kai-fa-zhi-yin.md)
+**For Developer**: [01-ESPlane2.0 Develop Guide](esplane2.0-kai-fa-bi-ji/00esplane-kai-fa-zhi-yin.md)
 
 ![ESPlane](https://img-blog.csdnimg.cn/20191030202043361.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzIwNTE1NDYx,size_16,color_FFFFFF,t_70)
 
 ![A swarm of drones exploring the environment, avoiding obstacles and each other. \(Guus Schoonewille, TU Delft\)](https://img-blog.csdnimg.cn/20191030202634944.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzIwNTE1NDYx,size_16,color_FFFFFF,t_70)
 
-### Implemented features
+### Implemented Features
 
 1. Stabilize mode
 2. Height-hold mode (through cfcilent)
@@ -81,6 +81,8 @@
 | RXD0 |  |  |
 | GPIO35 | ADC\_7\_BAT | VBAT/2 |
 
+>note * Only the first device attaching to the bus can use CS0 pin.
+
 Note: Please pay attention to the flash voltage switch when using GPIO12.
 
 You can use `espefuse.py` to fix the flash voltage to 3.3v
@@ -88,9 +90,7 @@ You can use `espefuse.py` to fix the flash voltage to 3.3v
 espefuse.py --port /dev/ttyUSB0 set_flash_voltage 3.3V
 ```
 
->note * Only the first device attaching to the bus can use CS0 pin.
-
-####  ESP-IDF version
+####  ESP-IDF Version
 
 |ESPlane|CommitID| ESP-IDF|CommitID|
 | :---: | :---: | :---: | :---: |
