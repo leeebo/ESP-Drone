@@ -1,42 +1,42 @@
+﻿
 # Introduction
 
 ## ESPlane2.0
 
-**Drones powered by ESP32&ESP-IDF&Crazyflie**
+**Drones powered by ESP32&ESP\_IDF&Crazyflie**
 
-### Introduction
+### 一、简介
 
-**ESPlane2.0** is an open source **drone solution** based on espressif **ESP32** Wi-Fi chip, which can be controlled through **Wi-Fi** network using mobile APP or gamepad. ESPlane2.0 supports multiple fly modes, `stabilize`, `height-hold`, `position-hold` and more. ESPlane2.0 solution has **simple hardware structure**,**clear and extendible code architecture**, can be used in **STEAM education** and other fields. The main code ported from **Crazyflie** open source project, using the **GPL3.0** open source protocol.
-
-**For User**: [01-ESPlane2.0 Operate Guide](esplane2.0-kai-fa-bi-ji/00esplane-shang-wei-ji-an-zhuang-zhi-yin.md)
-
-**For Developer**: [01-ESPlane2.0 Develop Guide](esplane2.0-kai-fa-bi-ji/00esplane-kai-fa-zhi-yin.md)
+ESPlane2.0 是基于乐鑫 ESP32 开发的小型无人机解决方案，可使用手机 APP 或游戏手柄通过 Wi-Fi 网络进行连接和控制，目前已支持自稳定飞行、定高飞行、定点飞行等多种模式。该方案硬件结构简单，代码架构清晰完善,方便功能扩展，可用于STEAM教育等领域。控制系统代码来自 Crazyflie 开源工程，使用GPL3.0开源协议。
+项目wiki：[https://qljz1993.gitbook.io/esplane/](https://qljz1993.gitbook.io/esplane/)
 
 ![ESPlane](https://img-blog.csdnimg.cn/20191030202043361.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzIwNTE1NDYx,size_16,color_FFFFFF,t_70)
 
 ![A swarm of drones exploring the environment, avoiding obstacles and each other. \(Guus Schoonewille, TU Delft\)](https://img-blog.csdnimg.cn/20191030202634944.jpg?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzIwNTE1NDYx,size_16,color_FFFFFF,t_70)
 
-### Implemented Features
+### 二、已实现功能
 
-1. Stabilize mode
-2. Height-hold mode (through cfcilent)
-3. position-hold mode (through cfcilent)
-4. cfclient supported
-5. ESPilot supported
+1. 自稳定模式
+2. 定高模式（目前只支持手柄，APP不支持）
+3. 定点模式（目前只支持手柄，APP不支持）
+4. 对接cfclient上位机 
+5. espilot APP控制
 
-### Configuration
 
-#### Sensor
+### 三、配置表
 
-| Sensor | Interface | Comment |
-| :--- | :--- | :--- |
+#### 传感器
+
+| Sensor  | Interface | Comment |
+|--|--|--|
 | MPU6050 | I2C0 | must |
 | VL53L1X | I2C0 | altitude hold  |
 | ~~HMC5883L~~  | AUX_I2C | MPU6050 slave |
 | ~~MS5611~~  | AUX_I2C | MPU6050 slave |
-|PMW3901|	HSPI | |
+|PMW3901|	HSPI | | 
 
-#### LED
+#### 指示灯
+
 
 ```
 #define LINK_LED         LED_BLUE
@@ -55,12 +55,12 @@
 |UDP_RX|GREEN|BLINK|
 
 
-#### PIN
+#### 引脚配置
 
-| Pin | Function | Remarks |
+| 引脚 | 功能 | 备注 |
 | :---: | :---: | :---: |
-| GPIO21 | I2C0 SDA | MPU6050 dedicated|
-| GPIO22 | I2C0 SCL | MPU6050 dedicated|
+| GPIO21 | I2C0 SDA | MPU6050 专用|
+| GPIO22 | I2C0 SCL | MPU6050 专用|
 | GPIO12 | MISO/SRV\_1 | PMW3901 HSPI |
 | GPIO13 | MOSI | PMW3901 HSPI  |
 | GPIO14 | SCLK/SRV\_2 | PMW3901 HSPI |
@@ -81,18 +81,15 @@
 | RXD0 |  |  |
 | GPIO35 | ADC\_7\_BAT | VBAT/2 |
 
->note * Only the first device attaching to the bus can use CS0 pin.
+防止上电时 IO12 触发 flash 电压切换 ，可使用`espefuse.py`将flash电压固定到 3.3v
 
-Note: Please pay attention to the flash voltage switch when using GPIO12.
+`espefuse.py --port /dev/ttyUSB0 set_flash_voltage 3.3V`
 
-You can use `espefuse.py` to fix the flash voltage to 3.3v
-```
-espefuse.py --port /dev/ttyUSB0 set_flash_voltage 3.3V
-```
+```note * Only the first device attaching to the bus can use CS0 pin.```
 
-####  ESP-IDF Version
+### 四、 esp_idf 版本
 
-|ESPlane|CommitID| ESP-IDF|CommitID|
+|esplane版本|esplane_commitID|esp_idf版本|esp_idf_commitID|
 | :---: | :---: | :---: | :---: |
 |master||release/v3.3 update20200306|6f9a7264ce20c6132fbd8309112630d0eb490fe4|
 |release/v0.1||release/v3.3|46b12a560a29fa6ade07800a4abe12a026183988|
@@ -100,9 +97,9 @@ espefuse.py --port /dev/ttyUSB0 set_flash_voltage 3.3V
 |dev_position_hold_oldversion||release/v3.3|46b12a560a29fa6ade07800a4abe12a026183988|
 
 
-### THANKS
+### 五、感谢/THANKS
 
-1. Thanks to the Bitcraze for the great [Crazyflie project](https://www.bitcraze.io/%20)
-2. Thanks to Espressif for the powerful [ESP-IDF environment](https://docs.espressif.com/projects/esp-idf/en/latest/index.html)
-3. Thanks to WhyEngineer for the useful [ESP-DSP lib](https://github.com/whyengineer/esp32-lin/tree/master/components/dsp_lib)
+1. 感谢Bitcraze开源组织提供很棒的[Crazyflie](https://www.bitcraze.io/%20)无人机项目代码
+2. 感谢Espressif提供ESP32和[ESP-IDF操作系统](https://docs.espressif.com/projects/esp-idf/en/latest/index.html)
+3. 感谢WhyEngineer提供的stm32 dsp移植库[esp-dsp](https://github.com/whyengineer/esp32-lin/tree/master/components/dsp_lib)
 
