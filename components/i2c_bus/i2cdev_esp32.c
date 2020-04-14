@@ -1,8 +1,8 @@
 /**
  *
  * ESPlane Firmware
- * 
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2012 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -37,8 +37,8 @@
 #include "debug_cf.h"
 
 int i2cdevInit(I2C_Dev *dev)
-{   
-    i2cdrvInit(dev); 
+{
+    i2cdrvInit(dev);
     return true;
 }
 
@@ -66,20 +66,22 @@ bool i2cdevReadBits(I2C_Dev *dev, uint8_t devAddress, uint8_t memAddress,
     bool status;
     uint8_t byte;
 
-    if ((status = i2cdevReadByte(dev, devAddress, memAddress, &byte)) == true)
-    {
+    if ((status = i2cdevReadByte(dev, devAddress, memAddress, &byte)) == true) {
         uint8_t mask = ((1 << length) - 1) << (bitStart - length + 1);
         byte &= mask;
         byte >>= (bitStart - length + 1);
         *data = byte;
     }
+
     return status;
 }
 
 bool i2cdevReadReg8(I2C_Dev *dev, uint8_t devAddress, uint8_t memAddress,
                     uint16_t len, uint8_t *data)
 {
-    if(xSemaphoreTake(dev->isBusFreeMutex, (TickType_t)5) == pdFALSE) return false;
+    if (xSemaphoreTake(dev->isBusFreeMutex, (TickType_t)5) == pdFALSE) {
+        return false;
+    }
 
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
     i2c_master_start(cmd);
@@ -89,46 +91,51 @@ bool i2cdevReadReg8(I2C_Dev *dev, uint8_t devAddress, uint8_t memAddress,
     i2c_master_write_byte(cmd, (devAddress << 1) | I2C_MASTER_READ, I2C_MASTER_ACK_EN);
     i2c_master_read(cmd, data, len, I2C_MASTER_LAST_NACK);
     i2c_master_stop(cmd);
-    esp_err_t err = i2c_master_cmd_begin(dev->def->i2cPort, cmd,(TickType_t)5);
+    esp_err_t err = i2c_master_cmd_begin(dev->def->i2cPort, cmd, (TickType_t)5);
     i2c_cmd_link_delete(cmd);
 
     xSemaphoreGive(dev->isBusFreeMutex);
 
 #if defined CONFIG_I2CBUS_LOG_READWRITES
-    if (!err)
-    {
+
+    if (!err) {
         char str[length * 5 + 1];
-        for (size_t i = 0; i < length; i++)
+
+        for (size_t i = 0; i < length; i++) {
             sprintf(str + i * 5, "0x%s%X ", (data[i] < 0x10 ? "0" : ""), data[i]);
+        }
+
         I2CBUS_LOG_RW("[port:%d, slave:0x%X] Read_ %d bytes from register 0x%X, data: %s", port, devAddr, length, regAddr, str);
     }
+
 #endif
 #if defined CONFIG_I2CBUS_LOG_ERRORS
 #if defined CONFIG_I2CBUS_LOG_READWRITES
-    else
-    {
+    else {
 #else
-    if (err)
-    {
+
+    if (err) {
 #endif
         I2CBUS_LOGE("[port:%d, slave:0x%X] Failed to read %d bytes from register 0x%X, error: 0x%X",
                     port, devAddr, length, regAddr, err);
     }
+
 #endif
 
-    if (err==ESP_OK)
-    {
+    if (err == ESP_OK) {
         return TRUE;
-    }else{
+    } else {
         return false;
     }
-    
+
 }
 
 bool i2cdevReadReg16(I2C_Dev *dev, uint8_t devAddress, uint16_t memAddress,
                      uint16_t len, uint8_t *data)
 {
-    if(xSemaphoreTake(dev->isBusFreeMutex, (TickType_t)5) == pdFALSE) return false;
+    if (xSemaphoreTake(dev->isBusFreeMutex, (TickType_t)5) == pdFALSE) {
+        return false;
+    }
 
     uint8_t memAddress8[2];
     memAddress8[0] = (uint8_t)((memAddress >> 8) & 0x00FF);
@@ -147,31 +154,34 @@ bool i2cdevReadReg16(I2C_Dev *dev, uint8_t devAddress, uint16_t memAddress,
     xSemaphoreGive(dev->isBusFreeMutex);
 
 #if defined CONFIG_I2CBUS_LOG_READWRITES
-    if (!err)
-    {
+
+    if (!err) {
         char str[length * 5 + 1];
-        for (size_t i = 0; i < length; i++)
+
+        for (size_t i = 0; i < length; i++) {
             sprintf(str + i * 5, "0x%s%X ", (data[i] < 0x10 ? "0" : ""), data[i]);
+        }
+
         I2CBUS_LOG_RW("[port:%d, slave:0x%X] Read_ %d bytes from register 0x%X, data: %s", port, devAddr, length, regAddr, str);
     }
+
 #endif
 #if defined CONFIG_I2CBUS_LOG_ERRORS
 #if defined CONFIG_I2CBUS_LOG_READWRITES
-    else
-    {
+    else {
 #else
-    if (err)
-    {
+
+    if (err) {
 #endif
         I2CBUS_LOGE("[port:%d, slave:0x%X] Failed to read %d bytes from register 0x%X, error: 0x%X",
                     port, devAddr, length, regAddr, err);
     }
+
 #endif
 
-    if (err==ESP_OK)
-    {
+    if (err == ESP_OK) {
         return TRUE;
-    }else{
+    } else {
         return false;
     }
 
@@ -198,8 +208,7 @@ bool i2cdevWriteBits(I2C_Dev *dev, uint8_t devAddress, uint8_t memAddress,
     bool status;
     uint8_t byte;
 
-    if ((status = i2cdevReadByte(dev, devAddress, memAddress, &byte)) == true)
-    {
+    if ((status = i2cdevReadByte(dev, devAddress, memAddress, &byte)) == true) {
         uint8_t mask = ((1 << length) - 1) << (bitStart - length + 1);
         data <<= (bitStart - length + 1); // shift data into correct position
         data &= mask;                     // zero all non-important bits in data
@@ -215,7 +224,9 @@ bool i2cdevWriteBits(I2C_Dev *dev, uint8_t devAddress, uint8_t memAddress,
 bool i2cdevWriteReg8(I2C_Dev *dev, uint8_t devAddress, uint8_t memAddress,
                      uint16_t len, uint8_t *data)
 {
-    if(xSemaphoreTake(dev->isBusFreeMutex, (TickType_t)5) == pdFALSE) return false;
+    if (xSemaphoreTake(dev->isBusFreeMutex, (TickType_t)5) == pdFALSE) {
+        return false;
+    }
 
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
     i2c_master_start(cmd);
@@ -223,38 +234,41 @@ bool i2cdevWriteReg8(I2C_Dev *dev, uint8_t devAddress, uint8_t memAddress,
     i2c_master_write_byte(cmd, memAddress, I2C_MASTER_ACK_EN);
     i2c_master_write(cmd, (uint8_t *)data, len, I2C_MASTER_ACK_EN);
     i2c_master_stop(cmd);
-    esp_err_t err = i2c_master_cmd_begin(dev->def->i2cPort, cmd,(TickType_t)5);
+    esp_err_t err = i2c_master_cmd_begin(dev->def->i2cPort, cmd, (TickType_t)5);
     i2c_cmd_link_delete(cmd);
 
     xSemaphoreGive(dev->isBusFreeMutex);
 
 #if defined CONFIG_I2CBUS_LOG_READWRITES
-    if (!err)
-    {
+
+    if (!err) {
         char str[length * 5 + 1];
-        for (size_t i = 0; i < length; i++)
+
+        for (size_t i = 0; i < length; i++) {
             sprintf(str + i * 5, "0x%s%X ", (data[i] < 0x10 ? "0" : ""), data[i]);
+        }
+
         I2CBUS_LOG_RW("[port:%d, slave:0x%X] Write %d bytes to register 0x%X, data: %s",
                       port, devAddr, length, regAddr, str);
     }
+
 #endif
 #if defined CONFIG_I2CBUS_LOG_ERRORS
 #if defined CONFIG_I2CBUS_LOG_READWRITES
-    else
-    {
+    else {
 #else
-    if (err)
-    {
+
+    if (err) {
 #endif
         I2CBUS_LOGE("[port:%d, slave:0x%X] Failed to write %d bytes to__ register 0x%X, error: 0x%X",
                     port, devAddr, length, regAddr, err);
     }
+
 #endif
 
-    if (err==ESP_OK)
-    {
+    if (err == ESP_OK) {
         return TRUE;
-    }else{
+    } else {
         return false;
     }
 }
@@ -262,7 +276,9 @@ bool i2cdevWriteReg8(I2C_Dev *dev, uint8_t devAddress, uint8_t memAddress,
 bool i2cdevWriteReg16(I2C_Dev *dev, uint8_t devAddress, uint16_t memAddress,
                       uint16_t len, uint8_t *data)
 {
-    if(xSemaphoreTake(dev->isBusFreeMutex, (TickType_t)5) == pdFALSE) return false;
+    if (xSemaphoreTake(dev->isBusFreeMutex, (TickType_t)5) == pdFALSE) {
+        return false;
+    }
 
     uint8_t memAddress8[2];
     memAddress8[0] = (uint8_t)((memAddress >> 8) & 0x00FF);
@@ -273,38 +289,41 @@ bool i2cdevWriteReg16(I2C_Dev *dev, uint8_t devAddress, uint16_t memAddress,
     i2c_master_write(cmd, memAddress8, 2, I2C_MASTER_ACK_EN);
     i2c_master_write(cmd, (uint8_t *)data, len, I2C_MASTER_ACK_EN);
     i2c_master_stop(cmd);
-     esp_err_t err = i2c_master_cmd_begin(dev->def->i2cPort, cmd, (TickType_t)5);
+    esp_err_t err = i2c_master_cmd_begin(dev->def->i2cPort, cmd, (TickType_t)5);
     i2c_cmd_link_delete(cmd);
 
     xSemaphoreGive(dev->isBusFreeMutex);
 #if defined CONFIG_I2CBUS_LOG_READWRITES
-    if (!err)
-    {
+
+    if (!err) {
         char str[length * 5 + 1];
-        for (size_t i = 0; i < length; i++)
+
+        for (size_t i = 0; i < length; i++) {
             sprintf(str + i * 5, "0x%s%X ", (data[i] < 0x10 ? "0" : ""), data[i]);
+        }
+
         I2CBUS_LOG_RW("[port:%d, slave:0x%X] Write %d bytes to register 0x%X, data: %s",
                       port, devAddr, length, regAddr, str);
     }
+
 #endif
 
 #if defined CONFIG_I2CBUS_LOG_ERRORS
 #if defined CONFIG_I2CBUS_LOG_READWRITES
-    else
-    {
+    else {
 #else
-    if (err)
-    {
+
+    if (err) {
 #endif
         I2CBUS_LOGE("[port:%d, slave:0x%X] Failed to write %d bytes to__ register 0x%X, error: 0x%X",
                     port, devAddr, length, regAddr, err);
     }
+
 #endif
 
-    if (err==ESP_OK)
-    {
+    if (err == ESP_OK) {
         return TRUE;
-    }else{
+    } else {
         return false;
     }
 }

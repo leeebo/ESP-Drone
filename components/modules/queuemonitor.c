@@ -1,8 +1,8 @@
 /**
  *
  * ESPlane Firmware
- * 
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2012 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -37,13 +37,12 @@
 #define RESET_COUNTERS_AFTER_DISPLAY true
 #define DISPLAY_ONLY_OVERFLOW_QUEUES true
 
-typedef struct
-{
-  char* fileName;
-  char* queueName;
-  int sendCount;
-  int maxWaiting;
-  int fullCount;
+typedef struct {
+    char *fileName;
+    char *queueName;
+    int sendCount;
+    int maxWaiting;
+    int fullCount;
 } Data;
 
 static Data data[MAX_NR_OF_QUEUES];
@@ -54,116 +53,133 @@ static bool initialized = false;
 
 static void timerHandler(xTimerHandle timer);
 static void debugPrint();
-static bool filter(Data* queueData);
-static void debugPrintQueue(Data* queueData);
-static Data* getQueueData(xQueueHandle* xQueue);
-static int getMaxWaiting(xQueueHandle* xQueue, int prevPeak);
+static bool filter(Data *queueData);
+static void debugPrintQueue(Data *queueData);
+static Data *getQueueData(xQueueHandle *xQueue);
+static int getMaxWaiting(xQueueHandle *xQueue, int prevPeak);
 static void resetCounters();
 
-unsigned char ucQueueGetQueueNumber( xQueueHandle xQueue );
+unsigned char ucQueueGetQueueNumber(xQueueHandle xQueue);
 
 
-void queueMonitorInit() {
-  ASSERT(!initialized);
-  timer = xTimerCreate( "queueMonitorTimer", TIMER_PERIOD,
-    pdTRUE, NULL, timerHandler );
-  xTimerStart(timer, 100);
+void queueMonitorInit()
+{
+    ASSERT(!initialized);
+    timer = xTimerCreate("queueMonitorTimer", TIMER_PERIOD,
+                         pdTRUE, NULL, timerHandler);
+    xTimerStart(timer, 100);
 
-  data[0].fileName = "Na";
-  data[0].queueName = "Na";
+    data[0].fileName = "Na";
+    data[0].queueName = "Na";
 
-  initialized = true;
+    initialized = true;
 }
 
-void qm_traceQUEUE_SEND(void* xQueue) {
-  if(initialized) {
-    Data* queueData = getQueueData(xQueue);
+void qm_traceQUEUE_SEND(void *xQueue)
+{
+    if (initialized) {
+        Data *queueData = getQueueData(xQueue);
 
-    queueData->sendCount++;
-    queueData->maxWaiting = getMaxWaiting(xQueue, queueData->maxWaiting);
-  }
-}
-
-void qm_traceQUEUE_SEND_FAILED(void* xQueue) {
-  if(initialized) {
-    Data* queueData = getQueueData(xQueue);
-
-    queueData->fullCount++;
-  }
-}
-
-void qmRegisterQueue(xQueueHandle* xQueue, char* fileName, char* queueName) {
-  ASSERT(initialized);
-  ASSERT(nrOfQueues < MAX_NR_OF_QUEUES);
-  Data* queueData = &data[nrOfQueues];
-
-  queueData->fileName = fileName;
-  queueData->queueName = queueName;
-  vQueueSetQueueNumber(xQueue, nrOfQueues);
-
-  nrOfQueues++;
-}
-
-static Data* getQueueData(xQueueHandle* xQueue) {
-  unsigned char number = uxQueueGetQueueNumber(xQueue);
-  ASSERT(number < MAX_NR_OF_QUEUES);
-  return &data[number];
-}
-
-static int getMaxWaiting(xQueueHandle* xQueue, int prevPeak) {
-  // We get here before the current item is added to the queue.
-  // Must add 1 to get the peak value.
-  unsigned portBASE_TYPE waiting = uxQueueMessagesWaitingFromISR(xQueue) + 1;
-
-  if (waiting > prevPeak) {
-    return waiting;
-  }
-  return prevPeak;
-}
-
-static void debugPrint() {
-  int i = 0;
-  for (i = 0; i < nrOfQueues; i++) {
-    Data* queueData = &data[i];
-    if (filter(queueData)) {
-      debugPrintQueue(queueData);
+        queueData->sendCount++;
+        queueData->maxWaiting = getMaxWaiting(xQueue, queueData->maxWaiting);
     }
-  }
-
-  if (RESET_COUNTERS_AFTER_DISPLAY) {
-    resetCounters();
-  }
 }
 
-static bool filter(Data* queueData) {
-  bool doDisplay = false;
-  if (DISPLAY_ONLY_OVERFLOW_QUEUES) {
-    doDisplay = (queueData->fullCount != 0);
-  } else {
-    doDisplay = true;
-  }
-  return doDisplay;
+void qm_traceQUEUE_SEND_FAILED(void *xQueue)
+{
+    if (initialized) {
+        Data *queueData = getQueueData(xQueue);
+
+        queueData->fullCount++;
+    }
 }
 
-static void debugPrintQueue(Data* queueData) {
-  DEBUG_PRINTD("%s:%s, sent: %i, peak: %i, full: %i\n",
-    queueData->fileName, queueData->queueName, queueData->sendCount,
-    queueData->maxWaiting, queueData->fullCount);
+void qmRegisterQueue(xQueueHandle *xQueue, char *fileName, char *queueName)
+{
+    ASSERT(initialized);
+    ASSERT(nrOfQueues < MAX_NR_OF_QUEUES);
+    Data *queueData = &data[nrOfQueues];
+
+    queueData->fileName = fileName;
+    queueData->queueName = queueName;
+    vQueueSetQueueNumber(xQueue, nrOfQueues);
+
+    nrOfQueues++;
 }
 
-static void resetCounters() {
-  int i = 0;
-  for (i = 0; i < nrOfQueues; i++) {
-    Data* queueData = &data[i];
-
-    queueData->sendCount = 0;
-    queueData->maxWaiting = 0;
-    queueData->fullCount = 0;
-  }
+static Data *getQueueData(xQueueHandle *xQueue)
+{
+    unsigned char number = uxQueueGetQueueNumber(xQueue);
+    ASSERT(number < MAX_NR_OF_QUEUES);
+    return &data[number];
 }
 
-static void timerHandler(xTimerHandle timer) {
-  debugPrint();
+static int getMaxWaiting(xQueueHandle *xQueue, int prevPeak)
+{
+    // We get here before the current item is added to the queue.
+    // Must add 1 to get the peak value.
+    unsigned portBASE_TYPE waiting = uxQueueMessagesWaitingFromISR(xQueue) + 1;
+
+    if (waiting > prevPeak) {
+        return waiting;
+    }
+
+    return prevPeak;
+}
+
+static void debugPrint()
+{
+    int i = 0;
+
+    for (i = 0; i < nrOfQueues; i++) {
+        Data *queueData = &data[i];
+
+        if (filter(queueData)) {
+            debugPrintQueue(queueData);
+        }
+    }
+
+    if (RESET_COUNTERS_AFTER_DISPLAY) {
+        resetCounters();
+    }
+}
+
+static bool filter(Data *queueData)
+{
+    bool doDisplay = false;
+
+    if (DISPLAY_ONLY_OVERFLOW_QUEUES) {
+        doDisplay = (queueData->fullCount != 0);
+    } else {
+        doDisplay = true;
+    }
+
+    return doDisplay;
+}
+
+static void debugPrintQueue(Data *queueData)
+{
+    DEBUG_PRINTD("%s:%s, sent: %i, peak: %i, full: %i\n",
+                 queueData->fileName, queueData->queueName, queueData->sendCount,
+                 queueData->maxWaiting, queueData->fullCount);
+}
+
+static void resetCounters()
+{
+    int i = 0;
+
+    for (i = 0; i < nrOfQueues; i++) {
+        Data *queueData = &data[i];
+
+        queueData->sendCount = 0;
+        queueData->maxWaiting = 0;
+        queueData->fullCount = 0;
+    }
+}
+
+static void timerHandler(xTimerHandle timer)
+{
+    debugPrint();
 }
 
 #endif // DEBUG_QUEUE_MONITOR

@@ -2,7 +2,7 @@
  *
  * ESPlane Firmware
  *
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2017 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  * 解包函数，用于解包第3通道Communication protocol<https://www.bitcraze.io/docs/crazyflie-firmware/master/ctrp_generic_setpoint/>.
  * 填写setpoint结构体，在注册command回调函数commanderCrtpCB中调用
  *
@@ -39,31 +39,28 @@
 /**
  * CRTP commander rpyt packet format
  */
-struct CommanderCrtpLegacyValues
-{
-  float roll;       // deg
-  float pitch;      // deg
-  float yaw;        // deg
-  uint16_t thrust;
+struct CommanderCrtpLegacyValues {
+    float roll;       // deg
+    float pitch;      // deg
+    float yaw;        // deg
+    uint16_t thrust;
 } __attribute__((packed));
 
 /**
  * Stabilization modes for Roll, Pitch, Yaw.
  */
-typedef enum
-{
-  RATE    = 0,
-  ANGLE   = 1,
+typedef enum {
+    RATE    = 0,
+    ANGLE   = 1,
 } RPYType;
 
 /**
  * Yaw flight Modes
  */
-typedef enum
-{
-  CAREFREE  = 0, // Yaw is locked to world coordinates thus heading stays the same when yaw rotates
-  PLUSMODE  = 1, // Plus-mode. Motor M1 is defined as front
-  XMODE     = 2, // X-mode. M1 & M4 are defined as front
+typedef enum {
+    CAREFREE  = 0, // Yaw is locked to world coordinates thus heading stays the same when yaw rotates
+    PLUSMODE  = 1, // Plus-mode. Motor M1 is defined as front
+    XMODE     = 2, // X-mode. M1 & M4 are defined as front
 } YawModeType;
 
 static RPYType stabilizationModeRoll  = ANGLE; // Current stabilization type of roll (rate or angle)
@@ -85,13 +82,13 @@ static bool posSetMode = false;
  */
 static void rotateYaw(setpoint_t *setpoint, float yawRad)
 {
-  float cosy = cosf(yawRad);
-  float siny = sinf(yawRad);
-  float originalRoll = setpoint->attitude.roll;
-  float originalPitch = setpoint->attitude.pitch;
+    float cosy = cosf(yawRad);
+    float siny = sinf(yawRad);
+    float originalRoll = setpoint->attitude.roll;
+    float originalPitch = setpoint->attitude.pitch;
 
-  setpoint->attitude.roll = originalRoll * cosy - originalPitch * siny;
-  setpoint->attitude.pitch = originalPitch * cosy + originalRoll * siny;
+    setpoint->attitude.roll = originalRoll * cosy - originalPitch * siny;
+    setpoint->attitude.pitch = originalPitch * cosy + originalRoll * siny;
 }
 
 /**
@@ -99,120 +96,122 @@ static void rotateYaw(setpoint_t *setpoint, float yawRad)
  */
 static void yawModeUpdate(setpoint_t *setpoint)
 {
-  switch (yawMode)
-  {
-    case CAREFREE:
-      // TODO: Add frame of reference to setpoint
-      ASSERT(false);
-      break;
-    case PLUSMODE:
-      rotateYaw(setpoint, 45 * M_PI / 180);
-      break;
-    case XMODE: // Fall through
-    default:
-      // Default in x-mode. Do nothing
-      break;
-  }
+    switch (yawMode) {
+        case CAREFREE:
+            // TODO: Add frame of reference to setpoint
+            ASSERT(false);
+            break;
+
+        case PLUSMODE:
+            rotateYaw(setpoint, 45 * M_PI / 180);
+            break;
+
+        case XMODE: // Fall through
+        default:
+            // Default in x-mode. Do nothing
+            break;
+    }
 }
 
 void crtpCommanderRpytDecodeSetpoint(setpoint_t *setpoint, CRTPPacket *pk) //解包，填写setpoint结构体，在注册command回调函数commanderCrtpCB中调用
 {
-  struct CommanderCrtpLegacyValues *values = (struct CommanderCrtpLegacyValues*)pk->data;
+    struct CommanderCrtpLegacyValues *values = (struct CommanderCrtpLegacyValues *)pk->data;
 
-  if (commanderGetActivePriority() == COMMANDER_PRIORITY_DISABLE) {
-    thrustLocked = true;
-  }
-  if (values->thrust == 0) {
-    thrustLocked = false;
-  }
-
-  // Thrust
-  uint16_t rawThrust = values->thrust;
-
-  if (thrustLocked || (rawThrust < MIN_THRUST)) {//1000死区
-    setpoint->thrust = 0;
-  } else {
-    setpoint->thrust = fminf(rawThrust, MAX_THRUST);//最大60000
-  }
-
-  if (altHoldMode) {//定高模式参数
-    setpoint->thrust = 0;
-    setpoint->mode.z = modeVelocity;
-
-    setpoint->velocity.z = ((float) rawThrust - 32767.f) / 32767.f;
-  } else {
-    setpoint->mode.z = modeDisable;
-  }
-
-  // roll/pitch
-  if (posHoldMode) {//定点模式
-    setpoint->mode.x = modeVelocity;
-    setpoint->mode.y = modeVelocity;
-    setpoint->mode.roll = modeDisable;
-    setpoint->mode.pitch = modeDisable;
-
-    setpoint->velocity.x = values->pitch/30.0f;
-    setpoint->velocity.y = values->roll/30.0f;
-    setpoint->attitude.roll  = 0;
-    setpoint->attitude.pitch = 0;
-  } else if (posSetMode && values->thrust != 0) { //定点并修正
-    setpoint->mode.x = modeAbs;
-    setpoint->mode.y = modeAbs;
-    setpoint->mode.z = modeAbs;
-    setpoint->mode.roll = modeDisable;
-    setpoint->mode.pitch = modeDisable;
-    setpoint->mode.yaw = modeAbs;
-
-    setpoint->position.x = -values->pitch;
-    setpoint->position.y = values->roll;
-    setpoint->position.z = values->thrust/1000.0f;
-
-    setpoint->attitude.roll  = 0;
-    setpoint->attitude.pitch = 0;
-    setpoint->attitude.yaw = values->yaw;
-    setpoint->thrust = 0;
-  } else {
-    setpoint->mode.x = modeDisable;
-    setpoint->mode.y = modeDisable;
-
-    if (stabilizationModeRoll == RATE) {
-      setpoint->mode.roll = modeVelocity;
-      setpoint->attitudeRate.roll = values->roll;
-      setpoint->attitude.roll = 0;
-    } else {
-      setpoint->mode.roll = modeAbs;
-      setpoint->attitudeRate.roll = 0;
-      setpoint->attitude.roll = values->roll;
+    if (commanderGetActivePriority() == COMMANDER_PRIORITY_DISABLE) {
+        thrustLocked = true;
     }
 
-    if (stabilizationModePitch == RATE) {
-      setpoint->mode.pitch = modeVelocity;
-      setpoint->attitudeRate.pitch = values->pitch;
-      setpoint->attitude.pitch = 0;
-    } else {
-      setpoint->mode.pitch = modeAbs;
-      setpoint->attitudeRate.pitch = 0;
-      setpoint->attitude.pitch = values->pitch;
+    if (values->thrust == 0) {
+        thrustLocked = false;
     }
 
-    setpoint->velocity.x = 0;
-    setpoint->velocity.y = 0;
-  }
+    // Thrust
+    uint16_t rawThrust = values->thrust;
 
-  // Yaw
-  if (!posSetMode) {
-    if (stabilizationModeYaw == RATE) {
-      // legacy rate input is inverted
-      setpoint->attitudeRate.yaw = -values->yaw;
-      yawModeUpdate(setpoint);
-
-      setpoint->mode.yaw = modeVelocity;
+    if (thrustLocked || (rawThrust < MIN_THRUST)) {//1000死区
+        setpoint->thrust = 0;
     } else {
-      setpoint->mode.yaw = modeAbs;
-      setpoint->attitudeRate.yaw = 0;
-      setpoint->attitude.yaw = values->yaw;
+        setpoint->thrust = fminf(rawThrust, MAX_THRUST);//最大60000
     }
-  }
+
+    if (altHoldMode) {//定高模式参数
+        setpoint->thrust = 0;
+        setpoint->mode.z = modeVelocity;
+
+        setpoint->velocity.z = ((float) rawThrust - 32767.f) / 32767.f;
+    } else {
+        setpoint->mode.z = modeDisable;
+    }
+
+    // roll/pitch
+    if (posHoldMode) {//定点模式
+        setpoint->mode.x = modeVelocity;
+        setpoint->mode.y = modeVelocity;
+        setpoint->mode.roll = modeDisable;
+        setpoint->mode.pitch = modeDisable;
+
+        setpoint->velocity.x = values->pitch / 30.0f;
+        setpoint->velocity.y = values->roll / 30.0f;
+        setpoint->attitude.roll  = 0;
+        setpoint->attitude.pitch = 0;
+    } else if (posSetMode && values->thrust != 0) { //定点并修正
+        setpoint->mode.x = modeAbs;
+        setpoint->mode.y = modeAbs;
+        setpoint->mode.z = modeAbs;
+        setpoint->mode.roll = modeDisable;
+        setpoint->mode.pitch = modeDisable;
+        setpoint->mode.yaw = modeAbs;
+
+        setpoint->position.x = -values->pitch;
+        setpoint->position.y = values->roll;
+        setpoint->position.z = values->thrust / 1000.0f;
+
+        setpoint->attitude.roll  = 0;
+        setpoint->attitude.pitch = 0;
+        setpoint->attitude.yaw = values->yaw;
+        setpoint->thrust = 0;
+    } else {
+        setpoint->mode.x = modeDisable;
+        setpoint->mode.y = modeDisable;
+
+        if (stabilizationModeRoll == RATE) {
+            setpoint->mode.roll = modeVelocity;
+            setpoint->attitudeRate.roll = values->roll;
+            setpoint->attitude.roll = 0;
+        } else {
+            setpoint->mode.roll = modeAbs;
+            setpoint->attitudeRate.roll = 0;
+            setpoint->attitude.roll = values->roll;
+        }
+
+        if (stabilizationModePitch == RATE) {
+            setpoint->mode.pitch = modeVelocity;
+            setpoint->attitudeRate.pitch = values->pitch;
+            setpoint->attitude.pitch = 0;
+        } else {
+            setpoint->mode.pitch = modeAbs;
+            setpoint->attitudeRate.pitch = 0;
+            setpoint->attitude.pitch = values->pitch;
+        }
+
+        setpoint->velocity.x = 0;
+        setpoint->velocity.y = 0;
+    }
+
+    // Yaw
+    if (!posSetMode) {
+        if (stabilizationModeYaw == RATE) {
+            // legacy rate input is inverted
+            setpoint->attitudeRate.yaw = -values->yaw;
+            yawModeUpdate(setpoint);
+
+            setpoint->mode.yaw = modeVelocity;
+        } else {
+            setpoint->mode.yaw = modeAbs;
+            setpoint->attitudeRate.yaw = 0;
+            setpoint->attitude.yaw = values->yaw;
+        }
+    }
 }
 
 // Params for flight modes

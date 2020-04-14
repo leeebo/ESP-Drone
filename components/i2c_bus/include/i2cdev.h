@@ -1,8 +1,8 @@
 /**
  *
  * ESPlane Firmware
- * 
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2012 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -67,7 +67,7 @@ bool i2cdevRead(I2C_Dev *dev, uint8_t devAddress, uint16_t len, uint8_t *data);
  * @return TRUE if read was successful, otherwise FALSE.
  */
 bool i2cdevReadReg8(I2C_Dev *dev, uint8_t devAddress, uint8_t memAddress,
-               uint16_t len, uint8_t *data);
+                    uint16_t len, uint8_t *data);
 
 /**
  * Read bytes from an I2C peripheral with a 16bit internal reg/mem address
@@ -80,7 +80,7 @@ bool i2cdevReadReg8(I2C_Dev *dev, uint8_t devAddress, uint8_t memAddress,
  * @return TRUE if read was successful, otherwise FALSE.
  */
 bool i2cdevReadReg16(I2C_Dev *dev, uint8_t devAddress, uint16_t memAddress,
-               uint16_t len, uint8_t *data);
+                     uint16_t len, uint8_t *data);
 
 /**
  * I2C device init function.
@@ -113,7 +113,7 @@ bool i2cdevReadByte(I2C_Dev *dev, uint8_t devAddress, uint8_t memAddress,
  * @return TRUE if read was successful, otherwise FALSE.
  */
 bool i2cdevReadBit(I2C_Dev *dev, uint8_t devAddress, uint8_t memAddress,
-                     uint8_t bitNum, uint8_t *data);
+                   uint8_t bitNum, uint8_t *data);
 /**
  * Read up to 8 bits from an I2C peripheral
  * @param dev  Pointer to I2C peripheral to read from
@@ -150,7 +150,7 @@ bool i2cdevWrite(I2C_Dev *dev, uint8_t devAddress, uint16_t len, uint8_t *data);
  * @return TRUE if write was successful, otherwise FALSE.
  */
 bool i2cdevWriteReg8(I2C_Dev *dev, uint8_t devAddress, uint8_t memAddress,
-                 uint16_t len, uint8_t *data);
+                     uint16_t len, uint8_t *data);
 
 /**
  * Write bytes to an I2C peripheral with 16bit internal reg/mem address.
@@ -163,7 +163,7 @@ bool i2cdevWriteReg8(I2C_Dev *dev, uint8_t devAddress, uint8_t memAddress,
  * @return TRUE if write was successful, otherwise FALSE.
  */
 bool i2cdevWriteReg16(I2C_Dev *dev, uint8_t devAddress, uint16_t memAddress,
-                   uint16_t len, uint8_t *data);
+                      uint16_t len, uint8_t *data);
 
 /**
  * Write a byte to an I2C peripheral

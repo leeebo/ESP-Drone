@@ -1,5 +1,5 @@
 /*
- * 
+ *
  *
  * LPS node firmware.
  *
@@ -43,20 +43,22 @@ static void appTask(void *param);
 
 void __attribute__((weak)) appInit()
 {
-  if (isInit) return;
+    if (isInit) {
+        return;
+    }
 
-  xTaskCreate(appTask, "app", APP_STACKSIZE, NULL,
-              APP_PRIORITY, NULL);
-  isInit = true;
+    xTaskCreate(appTask, "app", APP_STACKSIZE, NULL,
+                APP_PRIORITY, NULL);
+    isInit = true;
 }
 
 static void appTask(void *param)
 {
-  systemWaitStart();
+    systemWaitStart();
 
-  appMain();
+    appMain();
 
-  while(1) {
-    vTaskDelay(portMAX_DELAY);
-  }
+    while (1) {
+        vTaskDelay(portMAX_DELAY);
+    }
 }

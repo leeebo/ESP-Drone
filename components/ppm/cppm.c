@@ -1,8 +1,8 @@
 /**
  *
  * ESPlane Firmware
- * 
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2013 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -28,7 +28,7 @@
 
 #include "stm32_legacy.h"
 #include "cppm.h"
- #include "nvicconf.h"
+#include "nvicconf.h"
 #include "commander.h"
 
 #define DEBUG_MODULE  "CPPM"
@@ -47,62 +47,59 @@ static bool isAvailible;
 
 void cppmInit(void)
 {
-  // captureQueue = xQueueCreate(64, sizeof(uint16_t));
-// 输入捕捉，用于兼容ppm接收机
+    // captureQueue = xQueueCreate(64, sizeof(uint16_t));
+// for ppm receiver
 
 }
 
 bool cppmIsAvailible(void)
 {
-  return isAvailible;
+    return isAvailible;
 }
 
 int cppmGetTimestamp(uint16_t *timestamp)
 {
-  ASSERT(timestamp);
+    ASSERT(timestamp);
 
-  return xQueueReceive(captureQueue, timestamp, portMAX_DELAY);
+    return xQueueReceive(captureQueue, timestamp, portMAX_DELAY);
 }
 
 void cppmClearQueue(void)
 {
-  xQueueReset(captureQueue);
+    xQueueReset(captureQueue);
 }
 
 float cppmConvert2Float(uint16_t timestamp, float min, float max)
 {
-  if (timestamp < CPPM_MIN_PPM_USEC)
-  {
-    timestamp = CPPM_MIN_PPM_USEC;
-  }
-  if (timestamp > CPPM_MAX_PPM_USEC)
-  {
-    timestamp = CPPM_MAX_PPM_USEC;
-  }
+    if (timestamp < CPPM_MIN_PPM_USEC) {
+        timestamp = CPPM_MIN_PPM_USEC;
+    }
 
-  float scale = (float)(timestamp - CPPM_MIN_PPM_USEC) / (float)(CPPM_MAX_PPM_USEC - CPPM_MIN_PPM_USEC);
+    if (timestamp > CPPM_MAX_PPM_USEC) {
+        timestamp = CPPM_MAX_PPM_USEC;
+    }
 
-  return min + ((max - min) * scale);
+    float scale = (float)(timestamp - CPPM_MIN_PPM_USEC) / (float)(CPPM_MAX_PPM_USEC - CPPM_MIN_PPM_USEC);
+
+    return min + ((max - min) * scale);
 }
 
 uint16_t cppmConvert2uint16(uint16_t timestamp)
 {
-  if (timestamp < CPPM_MIN_PPM_USEC)
-  {
-    timestamp = CPPM_MIN_PPM_USEC;
-  }
-  if (timestamp > CPPM_MAX_PPM_USEC)
-  {
-    timestamp = CPPM_MAX_PPM_USEC;
-  }
+    if (timestamp < CPPM_MIN_PPM_USEC) {
+        timestamp = CPPM_MIN_PPM_USEC;
+    }
 
-  uint16_t base = (timestamp - CPPM_MIN_PPM_USEC);
+    if (timestamp > CPPM_MAX_PPM_USEC) {
+        timestamp = CPPM_MAX_PPM_USEC;
+    }
 
-  return base * (65535 / (CPPM_MAX_PPM_USEC - CPPM_MIN_PPM_USEC));
+    uint16_t base = (timestamp - CPPM_MIN_PPM_USEC);
+
+    return base * (65535 / (CPPM_MAX_PPM_USEC - CPPM_MIN_PPM_USEC));
 }
 
 void __attribute__((used)) TIM8_TRG_COM_TIM14_IRQHandler()
 {
-  //TODO:
-// 输入捕捉，用于兼容ppm接收机
+    //TODO:
 }

@@ -6,8 +6,8 @@
  *    +------`   /_____/_/\__/\___/_/   \__,_/ /___/\___/
  *
  * ESPlane Firmware
- * 
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2019 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -42,7 +42,7 @@
 #define POS_UPDATE_RATE RATE_100_HZ
 #define POS_UPDATE_DT 1.0/POS_UPDATE_RATE
 
-static bool latestTofMeasurement(tofMeasurement_t* tofMeasurement);
+static bool latestTofMeasurement(tofMeasurement_t *tofMeasurement);
 
 // Measurements of TOF from laser sensor
 static xQueueHandle tofDataQueue;
@@ -50,83 +50,87 @@ static xQueueHandle tofDataQueue;
 
 void estimatorComplementaryInit(void)
 {
-  tofDataQueue = xQueueCreate(TOF_QUEUE_LENGTH, sizeof(tofMeasurement_t));
+    tofDataQueue = xQueueCreate(TOF_QUEUE_LENGTH, sizeof(tofMeasurement_t));
 
-  sensfusion6Init();
+    sensfusion6Init();
 }
 
 bool estimatorComplementaryTest(void)
 {
-  bool pass = true;
+    bool pass = true;
 
-  pass &= sensfusion6Test();
+    pass &= sensfusion6Test();
 
-  return pass;
+    return pass;
 }
 
 void estimatorComplementary(state_t *state, sensorData_t *sensorData, control_t *control, const uint32_t tick)
 {
-   //estimate step 01-get data from sensors data queue
-  sensorsAcquire(sensorData, tick); // Read sensors at full rate (1000Hz)
-  //estimate step 02-update attitude at 250Hz
-  if (RATE_DO_EXECUTE(ATTITUDE_UPDATE_RATE, tick)) {
-    //estimate step 2.1-update quaternion
-    sensfusion6UpdateQ(sensorData->gyro.x, sensorData->gyro.y, sensorData->gyro.z,
-                       sensorData->acc.x, sensorData->acc.y, sensorData->acc.z,
-                       ATTITUDE_UPDATE_DT);
+    //estimate step 01-get data from sensors data queue
+    sensorsAcquire(sensorData, tick); // Read sensors at full rate (1000Hz)
 
-    // Save attitude, adjusted for the legacy CF2 body coordinate system
-      //estimate step 2.2-Euler angles are calculated from quaternions
-    sensfusion6GetEulerRPY(&state->attitude.roll, &state->attitude.pitch, &state->attitude.yaw);
+    //estimate step 02-update attitude at 250Hz
+    if (RATE_DO_EXECUTE(ATTITUDE_UPDATE_RATE, tick)) {
+        //estimate step 2.1-update quaternion
+        sensfusion6UpdateQ(sensorData->gyro.x, sensorData->gyro.y, sensorData->gyro.z,
+                           sensorData->acc.x, sensorData->acc.y, sensorData->acc.z,
+                           ATTITUDE_UPDATE_DT);
 
-    // Save quaternion, hopefully one day this could be used in a better controller.
-    // Note that this is not adjusted for the legacy coordinate system
-    sensfusion6GetQuaternion(
-      &state->attitudeQuaternion.x,
-      &state->attitudeQuaternion.y,
-      &state->attitudeQuaternion.z,
-      &state->attitudeQuaternion.w);
+        // Save attitude, adjusted for the legacy CF2 body coordinate system
+        //estimate step 2.2-Euler angles are calculated from quaternions
+        sensfusion6GetEulerRPY(&state->attitude.roll, &state->attitude.pitch, &state->attitude.yaw);
 
-    state->acc.z = sensfusion6GetAccZWithoutGravity(sensorData->acc.x,
-                                                    sensorData->acc.y,
-                                                    sensorData->acc.z);
+        // Save quaternion, hopefully one day this could be used in a better controller.
+        // Note that this is not adjusted for the legacy coordinate system
+        sensfusion6GetQuaternion(
+            &state->attitudeQuaternion.x,
+            &state->attitudeQuaternion.y,
+            &state->attitudeQuaternion.z,
+            &state->attitudeQuaternion.w);
 
-    positionUpdateVelocity(state->acc.z, ATTITUDE_UPDATE_DT);
-  }
+        state->acc.z = sensfusion6GetAccZWithoutGravity(sensorData->acc.x,
+                       sensorData->acc.y,
+                       sensorData->acc.z);
+
+        positionUpdateVelocity(state->acc.z, ATTITUDE_UPDATE_DT);
+    }
+
 //estimate step 03-update position at 100Hz
-  if (RATE_DO_EXECUTE(POS_UPDATE_RATE, tick)) {
-    tofMeasurement_t tofMeasurement;
+    if (RATE_DO_EXECUTE(POS_UPDATE_RATE, tick)) {
+        tofMeasurement_t tofMeasurement;
 
-    latestTofMeasurement(&tofMeasurement);
-    positionEstimate(state, sensorData, &tofMeasurement, POS_UPDATE_DT, tick);
-  }
+        latestTofMeasurement(&tofMeasurement);
+        positionEstimate(state, sensorData, &tofMeasurement, POS_UPDATE_DT, tick);
+    }
 }
 
-static bool latestTofMeasurement(tofMeasurement_t* tofMeasurement) {
-  return xQueuePeek(tofDataQueue, tofMeasurement, 0) == pdTRUE;
+static bool latestTofMeasurement(tofMeasurement_t *tofMeasurement)
+{
+    return xQueuePeek(tofDataQueue, tofMeasurement, 0) == pdTRUE;
 }
 
 static bool overwriteMeasurement(xQueueHandle queue, void *measurement)
 {
-  portBASE_TYPE result;
-  bool isInInterrupt = false;//(SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) != 0;
+    portBASE_TYPE result;
+    bool isInInterrupt = false;//(SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) != 0;
 
-  if (isInInterrupt) {
-    portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
-    result = xQueueOverwriteFromISR(queue, measurement, &xHigherPriorityTaskWoken);
-    if(xHigherPriorityTaskWoken == pdTRUE)
-    {
-      portYIELD();
+    if (isInInterrupt) {
+        portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
+        result = xQueueOverwriteFromISR(queue, measurement, &xHigherPriorityTaskWoken);
+
+        if (xHigherPriorityTaskWoken == pdTRUE) {
+            portYIELD();
+        }
+    } else {
+        result = xQueueOverwrite(queue, measurement);
     }
-  } else {
-    result = xQueueOverwrite(queue, measurement);
-  }
-  return (result==pdTRUE);
+
+    return (result == pdTRUE);
 }
 
 
 bool estimatorComplementaryEnqueueTOF(const tofMeasurement_t *tof)
 {
-  // A distance (distance) [m] to the ground along the z_B axis.
-  return overwriteMeasurement(tofDataQueue, (void *)tof);
+    // A distance (distance) [m] to the ground along the z_B axis.
+    return overwriteMeasurement(tofDataQueue, (void *)tof);
 }

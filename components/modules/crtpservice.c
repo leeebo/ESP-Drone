@@ -1,8 +1,8 @@
 /**
  *
  * ESPlane Firmware
- * 
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2012 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -29,49 +29,52 @@
 #include "crtp.h"
 #include "crtpservice.h"
 
-static bool isInit=false;
+static bool isInit = false;
 
 typedef enum {
-  linkEcho   = 0x00,
-  linkSource = 0x01,
-  linkSink   = 0x02,
+    linkEcho   = 0x00,
+    linkSource = 0x01,
+    linkSink   = 0x02,
 } LinkNbr;
 
 void crtpserviceHandler(CRTPPacket *p);
 
 void crtpserviceInit(void)
 {
-  if (isInit)
-    return;
+    if (isInit) {
+        return;
+    }
 
-  // Register a callback to service the Link port
-  crtpRegisterPortCB(CRTP_PORT_LINK, crtpserviceHandler);
+    // Register a callback to service the Link port
+    crtpRegisterPortCB(CRTP_PORT_LINK, crtpserviceHandler);
 
-  isInit = true;
+    isInit = true;
 }
 
 bool crtpserviceTest(void)
 {
-  return isInit;
+    return isInit;
 }
 
 void crtpserviceHandler(CRTPPacket *p)
 {
-  switch (p->channel)
-  {
-    case linkEcho:
-      crtpSendPacket(p);
-      break;
-    case linkSource:
-      p->size = CRTP_MAX_DATA_SIZE;
-      bzero(p->data, CRTP_MAX_DATA_SIZE);
-      strcpy((char*)p->data, "Bitcraze Crazyflie");
-      crtpSendPacket(p);
-      break;
-    case linkSink:
-      /* Ignore packet */
-      break;
-    default:
-      break;
-  }
+    switch (p->channel) {
+        case linkEcho:
+            crtpSendPacket(p);
+            break;
+
+        case linkSource:
+            p->size = CRTP_MAX_DATA_SIZE;
+            bzero(p->data, CRTP_MAX_DATA_SIZE);
+            strcpy((char *)p->data, "Bitcraze Crazyflie");
+            crtpSendPacket(p);
+            break;
+
+        case linkSink:
+            /* Ignore packet */
+            break;
+
+        default:
+            break;
+    }
 }

@@ -1,50 +1,55 @@
-// =========================================================================
-// Released under the MIT License
-// Copyright 2017-2018 Natanael Josue Rabello. All rights reserved.
-// For the license information refer to LICENSE file in root directory.
-// =========================================================================
-
-/**
- * @file mpu_i2c.cpp
- * Example on how to setup MPU through I2C for basic usage.
- */
+// Copyright 2018 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#define DEBUG_MODULE "APP_MAIN"
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "stm32_legacy.h"
 #include "freertos/portmacro.h"
-#include "i2cdev.h"
+#include "nvs_flash.h"
+
+#include "stm32_legacy.h"
 #include "platform.h"
 #include "system.h"
-#include "nvs_flash.h"
+#define DEBUG_MODULE "APP_MAIN"
 #include "debug_cf.h"
 
 void app_main()
 {
-     esp_err_t ret = nvs_flash_init();
+    /*
+    * Initialize the platform and Launch the system task
+    * app_main will initialize and start everything
+    */
+
+    /* initialize nvs flash prepare for Wi-Fi */
+    esp_err_t ret = nvs_flash_init();
+
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-      ESP_ERROR_CHECK(nvs_flash_erase());
-      ret = nvs_flash_init();
-    }
-    ESP_ERROR_CHECK(ret); //wifi need this
-
-    //Initialize the platform.
-    if (platformInit() == false)
-    {
-        // The firmware is running on the wrong hardware. Halt
-        while (1);
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        ret = nvs_flash_init();
     }
 
-    //Launch the system task that will initialize and start everything
+    ESP_ERROR_CHECK(ret);
+
+    /*Initialize the platform.*/
+    if (platformInit() == false) {
+        while (1);//if  firmware is running on the wrong hardware, Halt
+    }
+
+    /*launch the system task */
     systemLaunch();
 
-
-    while (true)
-    {
-        vTaskDelay(100 / portTICK_PERIOD_MS);
-    }
 }

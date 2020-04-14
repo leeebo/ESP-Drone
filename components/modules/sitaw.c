@@ -1,8 +1,8 @@
 /*
  *
  * ESPlane Firmware
- * 
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2015 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -101,57 +101,65 @@ static void sitAwTuTest(float accz);
 static void sitAwPostStateUpdateCallOut(const sensorData_t *sensorData,
                                         const state_t *state)
 {
-  /* Code that shall run AFTER each attitude update, should be placed here. */
+    /* Code that shall run AFTER each attitude update, should be placed here. */
 
 #if defined(SITAW_ENABLED)
 #ifdef SITAW_FF_ENABLED
-  float accMAG = (sensorData->acc.x*sensorData->acc.x) +
-                 (sensorData->acc.y*sensorData->acc.y) +
-                 (sensorData->acc.z*sensorData->acc.z);
+    float accMAG = (sensorData->acc.x * sensorData->acc.x) +
+                   (sensorData->acc.y * sensorData->acc.y) +
+                   (sensorData->acc.z * sensorData->acc.z);
 
-  /* Test values for Free Fall detection. */
-  sitAwFFTest(state->acc.z, accMAG);
+    /* Test values for Free Fall detection. */
+    sitAwFFTest(state->acc.z, accMAG);
 #endif
 #ifdef SITAW_TU_ENABLED
-  /* check if we actually fly */
-  int sumRatio = 0;
-  for (int i = 0; i < NBR_OF_MOTORS; ++i) {
-    sumRatio += motorsGetRatio(i);
-  }
-  bool isFlying = sumRatio > SITAW_TU_IN_FLIGHT_THRESHOLD;
-  if (isFlying) {
-    /* Test values for Tumbled detection. */
-    sitAwTuTest(sensorData->acc.z);
-  }
+    /* check if we actually fly */
+    int sumRatio = 0;
+
+    for (int i = 0; i < NBR_OF_MOTORS; ++i) {
+        sumRatio += motorsGetRatio(i);
+    }
+
+    bool isFlying = sumRatio > SITAW_TU_IN_FLIGHT_THRESHOLD;
+
+    if (isFlying) {
+        /* Test values for Tumbled detection. */
+        sitAwTuTest(sensorData->acc.z);
+    }
+
 #endif
 #ifdef SITAW_AR_ENABLED
-/* Test values for At Rest detection. */
-  sitAwARTest(sensorData->acc.x, sensorData->acc.y, sensorData->acc.z);
+    /* Test values for At Rest detection. */
+    sitAwARTest(sensorData->acc.x, sensorData->acc.y, sensorData->acc.z);
 #endif
 #endif
 }
 
 static void sitAwPreThrustUpdateCallOut(setpoint_t *setpoint)
 {
-  /* Code that shall run BEFORE each thrust distribution update, should be placed here. */
+    /* Code that shall run BEFORE each thrust distribution update, should be placed here. */
 
 #if defined(SITAW_ENABLED)
 #ifdef SITAW_TU_ENABLED
-      if(sitAwTuDetected()) {
+
+    if (sitAwTuDetected()) {
         /* Kill the thrust to the motors if a Tumbled situation is detected. */
         stabilizerSetEmergencyStop();
-      }
+    }
+
 #endif
 
 #ifdef SITAW_FF_ENABLED
-      /* Force altHold mode if free fall is detected.
-         FIXME: Needs a flying/landing state (as soon as althold is enabled,
-                                              we are not freefalling anymore)
-       */
-      if(sitAwFFDetected() && !sitAwTuDetected()) {
+
+    /* Force altHold mode if free fall is detected.
+       FIXME: Needs a flying/landing state (as soon as althold is enabled,
+                                            we are not freefalling anymore)
+     */
+    if (sitAwFFDetected() && !sitAwTuDetected()) {
         setpoint->mode.z = modeVelocity;
         setpoint->velocity.z = 0;
-      }
+    }
+
 #endif
 #endif
 }
@@ -163,10 +171,10 @@ static void sitAwPreThrustUpdateCallOut(setpoint_t *setpoint)
  * should update the setpoint accordig to the current state situation
  */
 void sitAwUpdateSetpoint(setpoint_t *setpoint, const sensorData_t *sensorData,
-                                               const state_t *state)
+                         const state_t *state)
 {
-  sitAwPostStateUpdateCallOut(sensorData, state);
-  sitAwPreThrustUpdateCallOut(setpoint);
+    sitAwPostStateUpdateCallOut(sensorData, state);
+    sitAwPreThrustUpdateCallOut(setpoint);
 }
 
 #ifdef SITAW_FF_ENABLED
@@ -177,8 +185,8 @@ void sitAwUpdateSetpoint(setpoint_t *setpoint, const sensorData_t *sensorData,
  */
 void sitAwFFInit(void)
 {
-  triggerInit(&sitAwFFAccWZ, triggerFuncIsLE, SITAW_FF_THRESHOLD, SITAW_FF_TRIGGER_COUNT);
-  triggerActivate(&sitAwFFAccWZ, true);
+    triggerInit(&sitAwFFAccWZ, triggerFuncIsLE, SITAW_FF_THRESHOLD, SITAW_FF_TRIGGER_COUNT);
+    triggerActivate(&sitAwFFAccWZ, true);
 }
 
 /**
@@ -202,18 +210,18 @@ void sitAwFFInit(void)
  */
 void sitAwFFTest(float accWZ, float accMAG)
 {
-  /* Check that the total acceleration is close to zero. */
-  if(fabs(accMAG) > SITAW_FF_THRESHOLD) {
-    /* If the total acceleration deviates from 0, this is not a free fall situation. */
-    triggerReset(&sitAwFFAccWZ);
-  } else {
+    /* Check that the total acceleration is close to zero. */
+    if (fabs(accMAG) > SITAW_FF_THRESHOLD) {
+        /* If the total acceleration deviates from 0, this is not a free fall situation. */
+        triggerReset(&sitAwFFAccWZ);
+    } else {
 
-    /**
-     * AccWZ approaches -1 in free fall. Check that the value stays within
-     * SITAW_FF_THRESHOLD of -1 for the triggerCount specified.
-     */
-    triggerTestValue(&sitAwFFAccWZ, fabs(accWZ + 1));
-  }
+        /**
+         * AccWZ approaches -1 in free fall. Check that the value stays within
+         * SITAW_FF_THRESHOLD of -1 for the triggerCount specified.
+         */
+        triggerTestValue(&sitAwFFAccWZ, fabs(accWZ + 1));
+    }
 }
 
 /**
@@ -223,7 +231,7 @@ void sitAwFFTest(float accWZ, float accMAG)
  */
 bool sitAwFFDetected(void)
 {
-  return sitAwFFAccWZ.released;
+    return sitAwFFAccWZ.released;
 }
 #endif
 
@@ -235,8 +243,8 @@ bool sitAwFFDetected(void)
  */
 void sitAwARInit(void)
 {
-  triggerInit(&sitAwARAccZ, triggerFuncIsLE, SITAW_AR_THRESHOLD, SITAW_AR_TRIGGER_COUNT);
-  triggerActivate(&sitAwARAccZ, true);
+    triggerInit(&sitAwARAccZ, triggerFuncIsLE, SITAW_AR_THRESHOLD, SITAW_AR_TRIGGER_COUNT);
+    triggerActivate(&sitAwARAccZ, true);
 }
 
 /**
@@ -258,20 +266,20 @@ void sitAwARInit(void)
  */
 void sitAwARTest(float accX, float accY, float accZ)
 {
-  /* Check that there are no horizontal accelerations. At rest, these are 0. */
-  if((fabs(accX) > SITAW_AR_THRESHOLD) || (fabs(accY) > SITAW_AR_THRESHOLD)) {
-    /* If the X or Y accelerations are different than 0, the crazyflie is not at rest. */
-    triggerReset(&sitAwARAccZ);
-  }
+    /* Check that there are no horizontal accelerations. At rest, these are 0. */
+    if ((fabs(accX) > SITAW_AR_THRESHOLD) || (fabs(accY) > SITAW_AR_THRESHOLD)) {
+        /* If the X or Y accelerations are different than 0, the crazyflie is not at rest. */
+        triggerReset(&sitAwARAccZ);
+    }
 
-  /**
-   * If the test above indicates that there are no horizontal movements, test the
-   * vertical acceleration value against the trigger.
-   *
-   * The vertical acceleration must be close to 1, but is allowed to oscillate slightly
-   * around 1. Testing that the deviation from 1 stays within SITAW_AR_THRESHOLD.
-   */
-  triggerTestValue(&sitAwARAccZ, fabs(accZ - 1));
+    /**
+     * If the test above indicates that there are no horizontal movements, test the
+     * vertical acceleration value against the trigger.
+     *
+     * The vertical acceleration must be close to 1, but is allowed to oscillate slightly
+     * around 1. Testing that the deviation from 1 stays within SITAW_AR_THRESHOLD.
+     */
+    triggerTestValue(&sitAwARAccZ, fabs(accZ - 1));
 }
 
 /**
@@ -281,7 +289,7 @@ void sitAwARTest(float accX, float accY, float accZ)
  */
 bool sitAwARDetected(void)
 {
-  return sitAwARAccZ.released;
+    return sitAwARAccZ.released;
 }
 #endif
 
@@ -293,8 +301,8 @@ bool sitAwARDetected(void)
  */
 void sitAwTuInit(void)
 {
-  triggerInit(&sitAwTuAcc, triggerFuncIsLE, SITAW_TU_ACC_THRESHOLD, SITAW_TU_ACC_TRIGGER_COUNT);
-  triggerActivate(&sitAwTuAcc, true);
+    triggerInit(&sitAwTuAcc, triggerFuncIsLE, SITAW_TU_ACC_THRESHOLD, SITAW_TU_ACC_TRIGGER_COUNT);
+    triggerActivate(&sitAwTuAcc, true);
 }
 
 /**
@@ -312,7 +320,7 @@ void sitAwTuInit(void)
  */
 void sitAwTuTest(float accz)
 {
-  triggerTestValue(&sitAwTuAcc, accz);
+    triggerTestValue(&sitAwTuAcc, accz);
 }
 
 /**
@@ -322,7 +330,7 @@ void sitAwTuTest(float accz)
  */
 bool sitAwTuDetected(void)
 {
-  return sitAwTuAcc.released;
+    return sitAwTuAcc.released;
 }
 #endif
 
@@ -332,12 +340,12 @@ bool sitAwTuDetected(void)
 void sitAwInit(void)
 {
 #ifdef SITAW_FF_ENABLED
-  sitAwFFInit();
+    sitAwFFInit();
 #endif
 #ifdef SITAW_AR_ENABLED
-  sitAwARInit();
+    sitAwARInit();
 #endif
 #ifdef SITAW_TU_ENABLED
-  sitAwTuInit();
+    sitAwTuInit();
 #endif
 }

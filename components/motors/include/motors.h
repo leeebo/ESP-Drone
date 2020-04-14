@@ -1,8 +1,8 @@
 /**
  *
  * ESPlane Firmware
- * 
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2012 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -25,16 +25,19 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+
+#include "driver/ledc.h"
+
 #include "config.h"
 #include "stm32_legacy.h"
-#include "driver/ledc.h"
+
 
 /******** Defines ********/
 
 // CF2 PWM ripple is filtered better at 328kHz. At 168kHz the NCP702 regulator is affected.
 
-   #define MOTORS_PWM_BITS           LEDC_TIMER_8_BIT
-   #define MOTORS_PWM_PERIOD         ((1<<MOTORS_PWM_BITS) - 1)
+#define MOTORS_PWM_BITS           LEDC_TIMER_8_BIT
+#define MOTORS_PWM_PERIOD         ((1<<MOTORS_PWM_BITS) - 1)
 
 // Compensate thrust depending on battery voltage so it will produce about the same
 // amount of thrust independent of the battery voltage. Based on thrust measurement.
@@ -121,15 +124,13 @@
 #define FULL 1000
 #define STOP 0
 
-typedef enum
-{
-  BRUSHED,
-  BRUSHLESS
+typedef enum {
+    BRUSHED,
+    BRUSHLESS
 } motorsDrvType;
 
-typedef struct
-{
-  motorsDrvType drvType;
+typedef struct {
+    motorsDrvType drvType;
 
 } MotorPerifDef;
 
@@ -137,7 +138,7 @@ typedef struct
  * Motor mapping configurations
  */
 //extern const MotorPerifDef* motorMapNoMotors[NBR_OF_MOTORS];
-extern const MotorPerifDef* motorMapDefaultBrushed[NBR_OF_MOTORS];
+extern const MotorPerifDef *motorMapDefaultBrushed[NBR_OF_MOTORS];
 // extern const MotorPerifDef* motorMapDefaltConBrushless[NBR_OF_MOTORS];
 // extern const MotorPerifDef* motorMapBigQuadDeck[NBR_OF_MOTORS];
 // extern const MotorPerifDef* motorMapBoltBrushless[NBR_OF_MOTORS];
@@ -152,12 +153,12 @@ bool pwm_timmer_init();
 /**
  * Initialisation. Will set all motors ratio to 0%
  */
-void motorsInit(const MotorPerifDef** motorMapSelect);
+void motorsInit(const MotorPerifDef **motorMapSelect);
 
 /**
  * DeInitialisation. Reset to default
  */
-void motorsDeInit(const MotorPerifDef** motorMapSelect);
+void motorsDeInit(const MotorPerifDef **motorMapSelect);
 
 /**
  * Test of the motor modules. The test will spin each motor very short in
@@ -178,7 +179,7 @@ int motorsGetRatio(uint32_t id);
 /**
  * FreeRTOS Task to test the Motors driver
  */
-void motorsTestTask(void* params);
+void motorsTestTask(void *params);
 
 /* Set PWM frequency for motor controller
  * This function will set all motors into a "beep"-mode,

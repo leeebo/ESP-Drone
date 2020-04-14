@@ -1,8 +1,8 @@
 /**
  *
  * ESPlane Firmware
- * 
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2018 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -36,66 +36,73 @@ static int filterCloseDelayCounter = 0;
 static int previousFilterIndex = 0;
 
 typedef struct {
-  float acceptanceLevel;
-  int bucket;
+    float acceptanceLevel;
+    int bucket;
 } filterLevel_t;
 
 #define FILTER_LEVELS 5
 #define FILTER_NONE FILTER_LEVELS
 filterLevel_t filterLevels[FILTER_LEVELS] = {
-  {.acceptanceLevel = 0.4},
-  {.acceptanceLevel = 0.8},
-  {.acceptanceLevel = 1.2},
-  {.acceptanceLevel = 1.6},
-  {.acceptanceLevel = 2.0},
+    {.acceptanceLevel = 0.4},
+    {.acceptanceLevel = 0.8},
+    {.acceptanceLevel = 1.2},
+    {.acceptanceLevel = 1.6},
+    {.acceptanceLevel = 2.0},
 };
 
 
-static bool isDistanceDiffSmallerThanDistanceBetweenAnchors(const tdoaMeasurement_t* tdoa);
-static float distanceSq(const point_t* a, const point_t* b);
-static float sq(float a) {return a * a;}
-static void addToBucket(filterLevel_t* filter);
-static void removeFromBucket(filterLevel_t* filter);
+static bool isDistanceDiffSmallerThanDistanceBetweenAnchors(const tdoaMeasurement_t *tdoa);
+static float distanceSq(const point_t *a, const point_t *b);
+static float sq(float a)
+{
+    return a * a;
+}
+static void addToBucket(filterLevel_t *filter);
+static void removeFromBucket(filterLevel_t *filter);
 static int updateBuckets(float errorDistance);
 
 
 
-bool outlierFilterValidateTdoaSimple(const tdoaMeasurement_t* tdoa) {
-  return isDistanceDiffSmallerThanDistanceBetweenAnchors(tdoa);
+bool outlierFilterValidateTdoaSimple(const tdoaMeasurement_t *tdoa)
+{
+    return isDistanceDiffSmallerThanDistanceBetweenAnchors(tdoa);
 }
 
-bool outlierFilterValidateTdoaSteps(const tdoaMeasurement_t* tdoa, const float error, const vector_t* jacobian, const point_t* estPos) {
-  bool sampleIsGood = false;
+bool outlierFilterValidateTdoaSteps(const tdoaMeasurement_t *tdoa, const float error, const vector_t *jacobian, const point_t *estPos)
+{
+    bool sampleIsGood = false;
 
-  if (isDistanceDiffSmallerThanDistanceBetweenAnchors(tdoa)) {
-    float errorBaseDistance = sqrtf(powf(jacobian->x, 2) + powf(jacobian->y, 2) + powf(jacobian->z, 2));
-    errorDistance = fabsf(error / errorBaseDistance);
+    if (isDistanceDiffSmallerThanDistanceBetweenAnchors(tdoa)) {
+        float errorBaseDistance = sqrtf(powf(jacobian->x, 2) + powf(jacobian->y, 2) + powf(jacobian->z, 2));
+        errorDistance = fabsf(error / errorBaseDistance);
 
-    int filterIndex = updateBuckets(errorDistance);
+        int filterIndex = updateBuckets(errorDistance);
 
-    if (filterIndex > previousFilterIndex) {
-      filterCloseDelayCounter = FILTER_CLOSE_DELAY_COUNT;
-    } else if (filterIndex < previousFilterIndex) {
-      if (filterCloseDelayCounter > 0) {
-        filterCloseDelayCounter--;
-        filterIndex = previousFilterIndex;
-      }
+        if (filterIndex > previousFilterIndex) {
+            filterCloseDelayCounter = FILTER_CLOSE_DELAY_COUNT;
+        } else if (filterIndex < previousFilterIndex) {
+            if (filterCloseDelayCounter > 0) {
+                filterCloseDelayCounter--;
+                filterIndex = previousFilterIndex;
+            }
+        }
+
+        previousFilterIndex = filterIndex;
+
+        if (filterIndex == FILTER_NONE) {
+            // Lost tracking, open up to let the kalman filter converge
+            acceptanceLevel = 100.0;
+            sampleIsGood = true;
+        } else {
+            acceptanceLevel = filterLevels[filterIndex].acceptanceLevel;
+
+            if (errorDistance < acceptanceLevel) {
+                sampleIsGood = true;
+            }
+        }
     }
-    previousFilterIndex = filterIndex;
 
-    if (filterIndex == FILTER_NONE) {
-      // Lost tracking, open up to let the kalman filter converge
-      acceptanceLevel = 100.0;
-      sampleIsGood = true;
-    } else {
-      acceptanceLevel = filterLevels[filterIndex].acceptanceLevel;
-      if (errorDistance < acceptanceLevel) {
-        sampleIsGood = true;
-      }
-    }
-  }
-
-  return sampleIsGood;
+    return sampleIsGood;
 }
 
 
@@ -106,91 +113,102 @@ static const int32_t lhBadSampleWindowChange = -LH_TICKS_PER_FRAME;
 static const int32_t lhGoodSampleWindowChange = LH_TICKS_PER_FRAME / 2;
 static const float lhMaxError = 0.05f;
 
-void outlierFilterReset(OutlierFilterLhState_t* this, const uint32_t now) {
-  this->openingTime = now;
-  this->openingWindow = lhMinWindowTime;
+void outlierFilterReset(OutlierFilterLhState_t *this, const uint32_t now)
+{
+    this->openingTime = now;
+    this->openingWindow = lhMinWindowTime;
 }
 
 
-bool outlierFilterValidateLighthouseSweep(OutlierFilterLhState_t* this, const float distanceToBs, const float angleError, const uint32_t now) {
-  // float error = distanceToBs * tan(angleError);
-  // We use an approximattion
-  float error = distanceToBs * angleError;
+bool outlierFilterValidateLighthouseSweep(OutlierFilterLhState_t *this, const float distanceToBs, const float angleError, const uint32_t now)
+{
+    // float error = distanceToBs * tan(angleError);
+    // We use an approximattion
+    float error = distanceToBs * angleError;
 
-  bool isGoodSample = (fabsf(error) < lhMaxError);
-  if (isGoodSample) {
-    this->openingWindow += lhGoodSampleWindowChange;
-    if (this->openingWindow > lhMaxWindowTime) {
-      this->openingWindow = lhMaxWindowTime;
-    }
-  } else {
-    this->openingWindow += lhBadSampleWindowChange;
-    if (this->openingWindow < lhMinWindowTime) {
-      this->openingWindow = lhMinWindowTime;
-    }
-  }
+    bool isGoodSample = (fabsf(error) < lhMaxError);
 
-  bool result = true;
-  bool isFilterClosed = (now < this->openingTime);
-  if (isFilterClosed) {
-    result = isGoodSample;
-  }
+    if (isGoodSample) {
+        this->openingWindow += lhGoodSampleWindowChange;
 
-  this->openingTime = now + this->openingWindow;
-
-  return result;
-}
-
-
-static bool isDistanceDiffSmallerThanDistanceBetweenAnchors(const tdoaMeasurement_t* tdoa) {
-  float anchorDistanceSq = distanceSq(&tdoa->anchorPosition[0], &tdoa->anchorPosition[1]);
-  float distanceDiffSq = sq(tdoa->distanceDiff);
-  return (distanceDiffSq < anchorDistanceSq);
-}
-
-static float distanceSq(const point_t* a, const point_t* b) {
-  return sq(a->x - b->x) + sq(a->y - b->y) + sq(a->z - b->z);
-}
-
-
-static void addToBucket(filterLevel_t* filter) {
-  if (filter->bucket < MAX_BUCKET_FILL) {
-    filter->bucket++;
-  }
-}
-
-static void removeFromBucket(filterLevel_t* filter) {
-  if (filter->bucket > 0) {
-    filter->bucket--;
-  }
-}
-
-static int updateBuckets(float errorDistance) {
-  int filterIndex = FILTER_NONE;
-
-  for (int i = FILTER_LEVELS - 1; i >= 0; i--) {
-    filterLevel_t* filter = &filterLevels[i];
-
-    if (errorDistance < filter->acceptanceLevel) {
-      removeFromBucket(filter);
+        if (this->openingWindow > lhMaxWindowTime) {
+            this->openingWindow = lhMaxWindowTime;
+        }
     } else {
-      addToBucket(filter);
+        this->openingWindow += lhBadSampleWindowChange;
+
+        if (this->openingWindow < lhMinWindowTime) {
+            this->openingWindow = lhMinWindowTime;
+        }
     }
 
-    if (filter->bucket < BUCKET_ACCEPTANCE_LEVEL) {
-      filterIndex = i;
-    }
-  }
+    bool result = true;
+    bool isFilterClosed = (now < this->openingTime);
 
-  return filterIndex;
+    if (isFilterClosed) {
+        result = isGoodSample;
+    }
+
+    this->openingTime = now + this->openingWindow;
+
+    return result;
+}
+
+
+static bool isDistanceDiffSmallerThanDistanceBetweenAnchors(const tdoaMeasurement_t *tdoa)
+{
+    float anchorDistanceSq = distanceSq(&tdoa->anchorPosition[0], &tdoa->anchorPosition[1]);
+    float distanceDiffSq = sq(tdoa->distanceDiff);
+    return (distanceDiffSq < anchorDistanceSq);
+}
+
+static float distanceSq(const point_t *a, const point_t *b)
+{
+    return sq(a->x - b->x) + sq(a->y - b->y) + sq(a->z - b->z);
+}
+
+
+static void addToBucket(filterLevel_t *filter)
+{
+    if (filter->bucket < MAX_BUCKET_FILL) {
+        filter->bucket++;
+    }
+}
+
+static void removeFromBucket(filterLevel_t *filter)
+{
+    if (filter->bucket > 0) {
+        filter->bucket--;
+    }
+}
+
+static int updateBuckets(float errorDistance)
+{
+    int filterIndex = FILTER_NONE;
+
+    for (int i = FILTER_LEVELS - 1; i >= 0; i--) {
+        filterLevel_t *filter = &filterLevels[i];
+
+        if (errorDistance < filter->acceptanceLevel) {
+            removeFromBucket(filter);
+        } else {
+            addToBucket(filter);
+        }
+
+        if (filter->bucket < BUCKET_ACCEPTANCE_LEVEL) {
+            filterIndex = i;
+        }
+    }
+
+    return filterIndex;
 }
 
 LOG_GROUP_START(outlierf)
-  LOG_ADD(LOG_INT32, bucket0, &filterLevels[0].bucket)
-  LOG_ADD(LOG_INT32, bucket1, &filterLevels[1].bucket)
-  LOG_ADD(LOG_INT32, bucket2, &filterLevels[2].bucket)
-  LOG_ADD(LOG_INT32, bucket3, &filterLevels[3].bucket)
-  LOG_ADD(LOG_INT32, bucket4, &filterLevels[4].bucket)
-  LOG_ADD(LOG_FLOAT, accLev, &acceptanceLevel)
-  LOG_ADD(LOG_FLOAT, errD, &errorDistance)
+LOG_ADD(LOG_INT32, bucket0, &filterLevels[0].bucket)
+LOG_ADD(LOG_INT32, bucket1, &filterLevels[1].bucket)
+LOG_ADD(LOG_INT32, bucket2, &filterLevels[2].bucket)
+LOG_ADD(LOG_INT32, bucket3, &filterLevels[3].bucket)
+LOG_ADD(LOG_INT32, bucket4, &filterLevels[4].bucket)
+LOG_ADD(LOG_FLOAT, accLev, &acceptanceLevel)
+LOG_ADD(LOG_FLOAT, errD, &errorDistance)
 LOG_GROUP_STOP(outlierf)

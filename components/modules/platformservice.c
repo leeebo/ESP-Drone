@@ -1,8 +1,8 @@
 /**
  *
  * ESPlane Firmware
- * 
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2012 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -33,21 +33,21 @@
 #include "version.h"
 #include "platform.h"
 
-static bool isInit=false;
+static bool isInit = false;
 
 typedef enum {
-  platformCommand   = 0x00,
-  versionCommand    = 0x01,
+    platformCommand   = 0x00,
+    versionCommand    = 0x01,
 } Channel;
 
 typedef enum {
-  setContinousWave   = 0x00,
+    setContinousWave   = 0x00,
 } PlatformCommand;
 
 typedef enum {
-  getProtocolVersion = 0x00,
-  getFirmwareVersion = 0x01,
-  getDeviceTypeName  = 0x02,
+    getProtocolVersion = 0x00,
+    getFirmwareVersion = 0x01,
+    getDeviceTypeName  = 0x02,
 } VersionCommand;
 
 void platformserviceHandler(CRTPPacket *p);
@@ -56,68 +56,73 @@ static void versionCommandProcess(CRTPPacket *p);
 
 void platformserviceInit(void)
 {
-  if (isInit)
-    return;
+    if (isInit) {
+        return;
+    }
 
-  // Register a callback to service the Platform port
-  crtpRegisterPortCB(CRTP_PORT_PLATFORM, platformserviceHandler);
+    // Register a callback to service the Platform port
+    crtpRegisterPortCB(CRTP_PORT_PLATFORM, platformserviceHandler);
 
-  isInit = true;
+    isInit = true;
 }
 
 bool platformserviceTest(void)
 {
-  return isInit;
+    return isInit;
 }
 
 void platformserviceHandler(CRTPPacket *p)
 {
-  switch (p->channel)
-  {
-    case platformCommand:
-      platformCommandProcess(p->data[0], &p->data[1]);
-      crtpSendPacket(p);
-      break;
-    case versionCommand:
-      versionCommandProcess(p);
-    default:
-      break;
-  }
+    switch (p->channel) {
+        case platformCommand:
+            platformCommandProcess(p->data[0], &p->data[1]);
+            crtpSendPacket(p);
+            break;
+
+        case versionCommand:
+            versionCommandProcess(p);
+
+        default:
+            break;
+    }
 }
 
 static void platformCommandProcess(uint8_t command, uint8_t *data)
 {
-  switch (command) {
-    case setContinousWave:
-     //TODO:
-      break;
-    default:
-      break;
-  }
+    switch (command) {
+        case setContinousWave:
+            //TODO:
+            break;
+
+        default:
+            break;
+    }
 }
 
 static void versionCommandProcess(CRTPPacket *p)
 {
-  switch (p->data[0]) {
-    case getProtocolVersion:
-      *(int*)&p->data[1] = PROTOCOL_VERSION;
-      p->size = 5;
-      crtpSendPacket(p);
-      break;
-    case getFirmwareVersion:
-      strncpy((char*)&p->data[1], V_STAG, CRTP_MAX_DATA_SIZE-1);
-      p->size = (strlen(V_STAG)>CRTP_MAX_DATA_SIZE-1)?CRTP_MAX_DATA_SIZE:strlen(V_STAG)+1;
-      crtpSendPacket(p);
-      break;
-    case getDeviceTypeName:
-      {
-      const char* name = platformConfigGetDeviceTypeName();
-      strncpy((char*)&p->data[1], name, CRTP_MAX_DATA_SIZE-1);
-      p->size = (strlen(name)>CRTP_MAX_DATA_SIZE-1)?CRTP_MAX_DATA_SIZE:strlen(name)+1;
-      crtpSendPacket(p);
-      }
-      break;
-    default:
-      break;
-  }
+    switch (p->data[0]) {
+        case getProtocolVersion:
+            *(int *)&p->data[1] = PROTOCOL_VERSION;
+            p->size = 5;
+            crtpSendPacket(p);
+            break;
+
+        case getFirmwareVersion:
+            strncpy((char *)&p->data[1], V_STAG, CRTP_MAX_DATA_SIZE - 1);
+            p->size = (strlen(V_STAG) > CRTP_MAX_DATA_SIZE - 1) ? CRTP_MAX_DATA_SIZE : strlen(V_STAG) + 1;
+            crtpSendPacket(p);
+            break;
+
+        case getDeviceTypeName: {
+            const char *name = platformConfigGetDeviceTypeName();
+            strncpy((char *)&p->data[1], name, CRTP_MAX_DATA_SIZE - 1);
+            p->size = (strlen(name) > CRTP_MAX_DATA_SIZE - 1) ? CRTP_MAX_DATA_SIZE : strlen(name) + 1;
+            crtpSendPacket(p);
+        }
+        break;
+
+        default:
+            break;
+    }
 }

@@ -1,6 +1,6 @@
 /**
  * ESPlane Firmware
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011 Fabio Varesano <fvaresano@yahoo.it>
  * Copyright (C) 2011-2012 Bitcraze AB
  *
@@ -43,99 +43,99 @@ static bool isInit;
 
 bool eepromInit(I2C_Dev *i2cPort)
 {
-  if (isInit)
+    if (isInit) {
+        return true;
+    }
+
+    // I2Cx = i2cPort;
+    // devAddr = EEPROM_I2C_ADDR;
+    spi_flash_init();
+    DEBUG_PRINTI("spi_flash_init ... !");
+
+    isInit = true;
+
     return true;
-
-  // I2Cx = i2cPort;
-  // devAddr = EEPROM_I2C_ADDR;
-  spi_flash_init();
-  DEBUG_PRINTI("spi_flash_init ... !");
-
-  isInit = true;
-
-  return true;
 }
 
 bool eepromTest(void)
 {
-  bool status;
+    bool status;
 
-  status = true;
-  return status;
+    status = true;
+    return status;
 }
 
 #ifdef EEPROM_RUN_WRITE_READ_TEST
 static bool eepromTestWriteRead(void)
 {
-  bool status = true;
-  int i;
-  const uint8_t testData[20] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19};
-  uint8_t readData[20];
+    bool status = true;
+    int i;
+    const uint8_t testData[20] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
+    uint8_t readData[20];
 
-  for (i = 0; i < sizeof(testData) && status; i++)
-  {
-    // Write one byte with increasing addresses.
-    eepromWriteBuffer(&testData[i], i, 1);
-    // Read it all back and check
-    eepromReadBuffer(readData, 0, i+1);
-    status = (memcmp(testData, readData, i+1) == 0);
-  }
+    for (i = 0; i < sizeof(testData) && status; i++) {
+        // Write one byte with increasing addresses.
+        eepromWriteBuffer(&testData[i], i, 1);
+        // Read it all back and check
+        eepromReadBuffer(readData, 0, i + 1);
+        status = (memcmp(testData, readData, i + 1) == 0);
+    }
 
-  // Write it all.
-  eepromWriteBuffer(testData, 0, sizeof(testData));
-  for (i = 0; i < sizeof(testData) && status; i++)
-  {
-    // Read one byte with increasing addresses and check
-    eepromReadBuffer(&readData[i], i, 1);
-    status = (memcmp(testData, readData, i+1) == 0);
-  }
+    // Write it all.
+    eepromWriteBuffer(testData, 0, sizeof(testData));
 
-  return status;
+    for (i = 0; i < sizeof(testData) && status; i++) {
+        // Read one byte with increasing addresses and check
+        eepromReadBuffer(&readData[i], i, 1);
+        status = (memcmp(testData, readData, i + 1) == 0);
+    }
+
+    return status;
 }
 #endif
 
 bool eepromTestConnection(void)
 {
-  //uint8_t tmp;
-  bool status;
-
-  status = true;
-  return status;
-}
-
-bool eepromReadBuffer(uint8_t* buffer, size_t readAddr, size_t len)
-{
-  bool status = false;
-  esp_err_t err = spi_flash_read(readAddr,buffer,len);
-  if(err==ESP_OK)
-  {
+    //uint8_t tmp;
+    bool status;
 
     status = true;
-    DEBUG_PRINTI("spi_flash_read ok !");
-
-  }else
-  {
-    DEBUG_PRINTW("spi_flash_read err = %d",err);
-  }
-  
-  return status;
+    return status;
 }
 
-bool eepromWriteBuffer(uint8_t* buffer, size_t writeAddr, size_t len)
+bool eepromReadBuffer(uint8_t *buffer, size_t readAddr, size_t len)
 {
-  bool status = false;
-  writeAddr+=EEPROM_IN_FLASH_ADDR;
-  if(spi_flash_write(writeAddr,buffer,len)==ESP_OK)
-  {
+    bool status = false;
+    esp_err_t err = spi_flash_read(readAddr, buffer, len);
 
-    status = true;
+    if (err == ESP_OK) {
 
-  }
-  return status;
+        status = true;
+        DEBUG_PRINTI("spi_flash_read ok !");
+
+    } else {
+        DEBUG_PRINTW("spi_flash_read err = %d", err);
+    }
+
+    return status;
 }
 
-bool eepromWritePage(uint8_t* buffer, uint16_t writeAddr)
+bool eepromWriteBuffer(uint8_t *buffer, size_t writeAddr, size_t len)
 {
- //TODO: implement
-  return false;
+    bool status = false;
+    writeAddr += EEPROM_IN_FLASH_ADDR;
+
+    if (spi_flash_write(writeAddr, buffer, len) == ESP_OK) {
+
+        status = true;
+
+    }
+
+    return status;
+}
+
+bool eepromWritePage(uint8_t *buffer, uint16_t writeAddr)
+{
+//TODO: implement
+    return false;
 }

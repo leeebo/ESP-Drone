@@ -2,7 +2,7 @@
  *
  * ESPlane Firmware
  *
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2018 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -32,25 +32,30 @@ static uint16_t ranges[RANGE_T_END] = {0,};
 
 void rangeSet(rangeDirection_t direction, float range_m)
 {
-  if (direction > (RANGE_T_END-1)) return;
+    if (direction > (RANGE_T_END - 1)) {
+        return;
+    }
 
-  ranges[direction] = range_m * 1000;
+    ranges[direction] = range_m * 1000;
 }
 
 float rangeGet(rangeDirection_t direction)
 {
-    if (direction > (RANGE_T_END-1)) return 0;
+    if (direction > (RANGE_T_END - 1)) {
+        return 0;
+    }
 
-  return ranges[direction];
+    return ranges[direction];
 }
 
-bool rangeEnqueueDownRangeInEstimator(float distance, float stdDev, uint32_t timeStamp) {
-  tofMeasurement_t tofData;
-  tofData.timestamp = timeStamp;
-  tofData.distance = distance;
-  tofData.stdDev = stdDev;
+bool rangeEnqueueDownRangeInEstimator(float distance, float stdDev, uint32_t timeStamp)
+{
+    tofMeasurement_t tofData;
+    tofData.timestamp = timeStamp;
+    tofData.distance = distance;
+    tofData.stdDev = stdDev;
 
-  return estimatorEnqueueTOF(&tofData);
+    return estimatorEnqueueTOF(&tofData);
 }
 
 LOG_GROUP_START(range)

@@ -1,8 +1,8 @@
 /*
  *
  * ESPlane Firmware
- * 
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2015 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify

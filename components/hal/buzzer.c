@@ -1,8 +1,8 @@
 /**
 *
  * ESPlane Firmware
- * 
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2012 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -24,34 +24,36 @@
 #include "buzzer.h"
 #include "config.h"
 
-static struct buzzerControl * ctrl;
+static struct buzzerControl *ctrl;
 extern void buzzDeckInit();
 
 void buzzerInit()
 {
 #ifdef BUZZER_ON
-  buzzDeckInit();
+    buzzDeckInit();
 #endif
 }
 
 bool buzzerTest()
 {
-  return true;
+    return true;
 }
 
 void buzzerOff()
 {
-  if (ctrl)
-    ctrl->off();
+    if (ctrl) {
+        ctrl->off();
+    }
 }
 
 void buzzerOn(uint32_t freq)
 {
-  if (ctrl)
-    ctrl->on(freq);
+    if (ctrl) {
+        ctrl->on(freq);
+    }
 }
 
-void buzzerSetControl(struct buzzerControl * bc)
+void buzzerSetControl(struct buzzerControl *bc)
 {
-  ctrl = bc;
+    ctrl = bc;
 }

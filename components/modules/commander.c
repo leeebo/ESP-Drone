@@ -2,7 +2,7 @@
  *
  * ESPlane Firmware
  *
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2012 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -26,7 +26,7 @@
 #include "freertos/queue.h"
 
 #include "commander.h"
-#include "crtp_commander.h" 
+#include "crtp_commander.h"
 #include "crtp_commander_high_level.h"
 
 #include "param.h"
@@ -47,84 +47,86 @@ static QueueHandle_t priorityQueue;
 /* Public functions */
 void commanderInit(void)
 {
-  setpointQueue = xQueueCreate(1, sizeof(setpoint_t));
-  ASSERT(setpointQueue);
-  xQueueSend(setpointQueue, &nullSetpoint, 0);
+    setpointQueue = xQueueCreate(1, sizeof(setpoint_t));
+    ASSERT(setpointQueue);
+    xQueueSend(setpointQueue, &nullSetpoint, 0);
 
-  priorityQueue = xQueueCreate(1, sizeof(int));
-  ASSERT(priorityQueue);
-  xQueueSend(priorityQueue, &priorityDisable, 0);
+    priorityQueue = xQueueCreate(1, sizeof(int));
+    ASSERT(priorityQueue);
+    xQueueSend(priorityQueue, &priorityDisable, 0);
 
-  crtpCommanderInit();
-  crtpCommanderHighLevelInit();
-  lastUpdate = xTaskGetTickCount();
+    crtpCommanderInit();
+    crtpCommanderHighLevelInit();
+    lastUpdate = xTaskGetTickCount();
 
-  isInit = true;
+    isInit = true;
 }
 
 void commanderSetSetpoint(setpoint_t *setpoint, int priority)
 {
-  int currentPriority;
+    int currentPriority;
 
-  const BaseType_t peekResult = xQueuePeek(priorityQueue, &currentPriority, 0);
-  ASSERT(peekResult == pdTRUE);
+    const BaseType_t peekResult = xQueuePeek(priorityQueue, &currentPriority, 0);
+    ASSERT(peekResult == pdTRUE);
 
-  if (priority >= currentPriority) {
-    setpoint->timestamp = xTaskGetTickCount();
-    DEBUG_PRINTD("commanderSetSetpoint");
-    //command step - receive  10 forward to setpointQueue, waitting for the command execution
-    //This is a potential race but without effect on functionality
-    xQueueOverwrite(setpointQueue, setpoint);
-    xQueueOverwrite(priorityQueue, &priority);
-  }
+    if (priority >= currentPriority) {
+        setpoint->timestamp = xTaskGetTickCount();
+
+        /* command step - receive  10 forward to setpointQueue, waitting for the command execution
+        *This is a potential race but without effect on functionality
+        */
+        xQueueOverwrite(setpointQueue, setpoint);
+        xQueueOverwrite(priorityQueue, &priority);
+    }
 }
 
 void commanderGetSetpoint(setpoint_t *setpoint, const state_t *state)
 {
-  xQueuePeek(setpointQueue, setpoint, 0);
-  lastUpdate = setpoint->timestamp;
-  uint32_t currentTime = xTaskGetTickCount();
+    xQueuePeek(setpointQueue, setpoint, 0);
+    lastUpdate = setpoint->timestamp;
+    uint32_t currentTime = xTaskGetTickCount();
 
-  if ((currentTime - setpoint->timestamp) > COMMANDER_WDT_TIMEOUT_SHUTDOWN) {
-    if (enableHighLevel) {
-      crtpCommanderHighLevelGetSetpoint(setpoint, state);//PORT 8: CRTP_PORT_SETPOINT_HL, contains auto fly, ect.
+    if ((currentTime - setpoint->timestamp) > COMMANDER_WDT_TIMEOUT_SHUTDOWN) {
+        if (enableHighLevel) {
+            crtpCommanderHighLevelGetSetpoint(setpoint, state);//PORT 8: CRTP_PORT_SETPOINT_HL, contains auto fly, ect.
+        }
+
+        if (!enableHighLevel || crtpCommanderHighLevelIsStopped()) {//if HighLevel command is allowed
+            memcpy(setpoint, &nullSetpoint, sizeof(nullSetpoint));
+        }
+    } else if ((currentTime - setpoint->timestamp) > COMMANDER_WDT_TIMEOUT_STABILIZE) {//No new command after 2 seconds, maintain altitude
+        xQueueOverwrite(priorityQueue, &priorityDisable);
+        // Leveling ...
+        setpoint->mode.x = modeDisable;
+        setpoint->mode.y = modeDisable;
+        setpoint->mode.roll = modeAbs;
+        setpoint->mode.pitch = modeAbs;
+        setpoint->mode.yaw = modeVelocity;
+        setpoint->attitude.roll = 0;
+        setpoint->attitude.pitch = 0;
+        setpoint->attitudeRate.yaw = 0;
+        // Keep Z as it is
     }
-    if (!enableHighLevel || crtpCommanderHighLevelIsStopped()) {//if HighLevel command is allowed
-      memcpy(setpoint, &nullSetpoint, sizeof(nullSetpoint));
-    }
-  } else if ((currentTime - setpoint->timestamp) > COMMANDER_WDT_TIMEOUT_STABILIZE) {//No new command after 2 seconds, maintain altitude
-    xQueueOverwrite(priorityQueue, &priorityDisable);
-    // Leveling ...
-    setpoint->mode.x = modeDisable;
-    setpoint->mode.y = modeDisable;
-    setpoint->mode.roll = modeAbs;
-    setpoint->mode.pitch = modeAbs;
-    setpoint->mode.yaw = modeVelocity;
-    setpoint->attitude.roll = 0;
-    setpoint->attitude.pitch = 0;
-    setpoint->attitudeRate.yaw = 0;
-    // Keep Z as it is
-  }
 }
 
 bool commanderTest(void)
 {
-  return isInit;
+    return isInit;
 }
 
 uint32_t commanderGetInactivityTime(void)
 {
-  return xTaskGetTickCount() - lastUpdate;
+    return xTaskGetTickCount() - lastUpdate;
 }
 
 int commanderGetActivePriority(void)
 {
-  int priority;
+    int priority;
 
-  const BaseType_t peekResult = xQueuePeek(priorityQueue, &priority, 0);
-  ASSERT(peekResult == pdTRUE);
+    const BaseType_t peekResult = xQueuePeek(priorityQueue, &priority, 0);
+    ASSERT(peekResult == pdTRUE);
 
-  return priority;
+    return priority;
 }
 
 PARAM_GROUP_START(commander)

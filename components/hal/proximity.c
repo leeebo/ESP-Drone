@@ -1,8 +1,8 @@
 /*
  *
  * ESPlane Firmware
- * 
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2015 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -67,26 +67,28 @@ LOG_GROUP_STOP(proximity)
  */
 static uint32_t proximitySWinMedian(uint32_t *proximitySWin)
 {
-  /* The most recent samples, sorted in increasing sample value order. Must be initialized before use. */
-  uint32_t proximitySorted[PROXIMITY_SWIN_SIZE];
+    /* The most recent samples, sorted in increasing sample value order. Must be initialized before use. */
+    uint32_t proximitySorted[PROXIMITY_SWIN_SIZE];
 
-  /* Create a copy of the chronologically sequenced buffer. */
-  memcpy(proximitySorted, proximitySWin, sizeof(uint32_t)*PROXIMITY_SWIN_SIZE);
+    /* Create a copy of the chronologically sequenced buffer. */
+    memcpy(proximitySorted, proximitySWin, sizeof(uint32_t)*PROXIMITY_SWIN_SIZE);
 
-  /* Now sort this copy. */
-  uint8_t n;
-  for (n = 1; n < PROXIMITY_SWIN_SIZE; ++n) {
-    uint32_t valn = proximitySorted[n];
-    int8_t m; /* May reach value of -1 */
-    for (m = n - 1; (m >= 0) && (valn < proximitySorted[m]); m--)
-    {
-      proximitySorted[m + 1] = proximitySorted[m];
+    /* Now sort this copy. */
+    uint8_t n;
+
+    for (n = 1; n < PROXIMITY_SWIN_SIZE; ++n) {
+        uint32_t valn = proximitySorted[n];
+        int8_t m; /* May reach value of -1 */
+
+        for (m = n - 1; (m >= 0) && (valn < proximitySorted[m]); m--) {
+            proximitySorted[m + 1] = proximitySorted[m];
+        }
+
+        proximitySorted[m + 1] = valn;
     }
-    proximitySorted[m + 1] = valn;
-  }
 
-  /* Return the median value of the samples. */
-  return proximitySorted[PROXIMITY_SWIN_SIZE / 2];
+    /* Return the median value of the samples. */
+    return proximitySorted[PROXIMITY_SWIN_SIZE / 2];
 }
 
 /**
@@ -99,24 +101,26 @@ static uint32_t proximitySWinMedian(uint32_t *proximitySWin)
  */
 static uint32_t proximitySWinAdd(uint32_t distance)
 {
-  /* Discard oldest sample, move remaining samples one slot to the left. */
-  memmove(&proximitySWin[0], &proximitySWin[1], (PROXIMITY_SWIN_SIZE - 1) * sizeof(uint32_t));
+    /* Discard oldest sample, move remaining samples one slot to the left. */
+    memmove(&proximitySWin[0], &proximitySWin[1], (PROXIMITY_SWIN_SIZE - 1) * sizeof(uint32_t));
 
-  /* Add the new sample in the last (right-most) slot. */
-  proximitySWin[PROXIMITY_SWIN_SIZE - 1] = distance;
+    /* Add the new sample in the last (right-most) slot. */
+    proximitySWin[PROXIMITY_SWIN_SIZE - 1] = distance;
 
-  /**
-   * Calculate the new average distance. Sum all the samples into a uint64_t,
-   * so that we only do a single division at the end.
-   */
-  uint64_t proximityNewAvg = 0;
-  uint8_t n;
-  for (n = 0; n < PROXIMITY_SWIN_SIZE; n++) {
-    proximityNewAvg += proximitySWin[n];
-  }
-  proximityNewAvg = proximityNewAvg / PROXIMITY_SWIN_SIZE;
+    /**
+     * Calculate the new average distance. Sum all the samples into a uint64_t,
+     * so that we only do a single division at the end.
+     */
+    uint64_t proximityNewAvg = 0;
+    uint8_t n;
 
-  return (uint32_t)proximityNewAvg;
+    for (n = 0; n < PROXIMITY_SWIN_SIZE; n++) {
+        proximityNewAvg += proximitySWin[n];
+    }
+
+    proximityNewAvg = proximityNewAvg / PROXIMITY_SWIN_SIZE;
+
+    return (uint32_t)proximityNewAvg;
 }
 
 /**
@@ -124,32 +128,31 @@ static uint32_t proximitySWinAdd(uint32_t distance)
  *
  * @param param Currently unused.
  */
-static void proximityTask(void* param)
+static void proximityTask(void *param)
 {
-  uint32_t lastWakeTime;
+    uint32_t lastWakeTime;
 
-  vTaskSetApplicationTaskTag(0, (void*)TASK_PROXIMITY_ID_NBR);
+    vTaskSetApplicationTaskTag(0, (void *)TASK_PROXIMITY_ID_NBR);
 
-  //Wait for the system to be fully started to start stabilization loop
-  systemWaitStart();
+    //Wait for the system to be fully started to start stabilization loop
+    systemWaitStart();
 
-  lastWakeTime = xTaskGetTickCount();
+    lastWakeTime = xTaskGetTickCount();
 
-  while(1)
-  {
-    vTaskDelayUntil(&lastWakeTime, F2T(PROXIMITY_TASK_FREQ));
+    while (1) {
+        vTaskDelayUntil(&lastWakeTime, F2T(PROXIMITY_TASK_FREQ));
 
 #if defined(MAXSONAR_ENABLED)
-    /* Read the MaxBotix sensor. */
-    proximityDistance = maxSonarReadDistance(MAXSONAR_MB1040_AN, &proximityAccuracy);
+        /* Read the MaxBotix sensor. */
+        proximityDistance = maxSonarReadDistance(MAXSONAR_MB1040_AN, &proximityAccuracy);
 #endif
 
-    /* Get the latest average value calculated. */
-    proximityDistanceAvg = proximitySWinAdd(proximityDistance);
+        /* Get the latest average value calculated. */
+        proximityDistanceAvg = proximitySWinAdd(proximityDistance);
 
-    /* Get the latest median value calculated. */
-    proximityDistanceMedian = proximitySWinMedian(proximitySWin);
-  }
+        /* Get the latest median value calculated. */
+        proximityDistanceMedian = proximitySWinMedian(proximitySWin);
+    }
 }
 #endif
 
@@ -158,19 +161,20 @@ static void proximityTask(void* param)
  */
 void proximityInit(void)
 {
-  if(isInit)
-    return;
+    if (isInit) {
+        return;
+    }
 
-  /* Initialise the sliding window to zero. */
-  memset(&proximitySWin, 0, sizeof(uint32_t)*PROXIMITY_SWIN_SIZE);
+    /* Initialise the sliding window to zero. */
+    memset(&proximitySWin, 0, sizeof(uint32_t)*PROXIMITY_SWIN_SIZE);
 
 #if defined(PROXIMITY_ENABLED)
-  /* Only start the task if the proximity subsystem is enabled in conf.h */
-  xTaskCreate(proximityTask, PROXIMITY_TASK_NAME,
-              PROXIMITY_TASK_STACKSIZE, NULL, PROXIMITY_TASK_PRI, NULL);
+    /* Only start the task if the proximity subsystem is enabled in conf.h */
+    xTaskCreate(proximityTask, PROXIMITY_TASK_NAME,
+                PROXIMITY_TASK_STACKSIZE, NULL, PROXIMITY_TASK_PRI, NULL);
 #endif
 
-  isInit = true;
+    isInit = true;
 }
 
 /**
@@ -180,7 +184,7 @@ void proximityInit(void)
  */
 uint32_t proximityGetDistance(void)
 {
-  return proximityDistance;
+    return proximityDistance;
 }
 
 /**
@@ -191,7 +195,7 @@ uint32_t proximityGetDistance(void)
  */
 uint32_t proximityGetDistanceAvg(void)
 {
-  return proximityDistanceAvg;
+    return proximityDistanceAvg;
 }
 
 /**
@@ -202,7 +206,7 @@ uint32_t proximityGetDistanceAvg(void)
  */
 uint32_t proximityGetDistanceMedian(void)
 {
-  return proximityDistanceMedian;
+    return proximityDistanceMedian;
 }
 
 /**
@@ -212,5 +216,5 @@ uint32_t proximityGetDistanceMedian(void)
  */
 uint32_t proximityGetAccuracy(void)
 {
-  return proximityAccuracy;
+    return proximityAccuracy;
 }

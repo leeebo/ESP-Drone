@@ -1,8 +1,8 @@
 /**
 *
  * ESPlane Firmware
- * 
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2012 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -39,7 +39,7 @@
 //#define CHG_LED          LED_RED
 #define LOWBAT_LED       LED_RED
 //#define LINK_DOWN_LED    LED_BLUE
-#define SYS_LED          LED_BLUE 
+#define SYS_LED          LED_BLUE
 #define ERR_LED1         LED_RED
 #define ERR_LED2         LED_RED
 

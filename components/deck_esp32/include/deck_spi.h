@@ -1,8 +1,8 @@
 /**
  *
  * ESPlane Firmware
- * 
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2015 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -27,10 +27,10 @@
 #include <string.h>
 
 // Based on 84MHz peripheral clock
-#define SPI_BAUDRATE_21MHZ  21*1000*1000     
-#define SPI_BAUDRATE_12MHZ  12*1000*1000     
-#define SPI_BAUDRATE_6MHZ   6*1000*1000    
-#define SPI_BAUDRATE_3MHZ   3*1000*1000    
+#define SPI_BAUDRATE_21MHZ  21*1000*1000
+#define SPI_BAUDRATE_12MHZ  12*1000*1000
+#define SPI_BAUDRATE_6MHZ   6*1000*1000
+#define SPI_BAUDRATE_3MHZ   3*1000*1000
 #define SPI_BAUDRATE_2MHZ   2*1000*1000
 
 /**
@@ -41,6 +41,6 @@ void spiBeginTransaction(uint16_t baudRatePrescaler);
 void spiEndTransaction();
 
 /* Send the data_tx buffer and receive into the data_rx buffer */
-bool spiExchange(size_t length, bool is_tx ,const uint8_t *data_tx, uint8_t *data_rx);
+bool spiExchange(size_t length, bool is_tx, const uint8_t *data_tx, uint8_t *data_rx);
 
 #endif /* SPI_H_ */

@@ -1,8 +1,8 @@
 /**
  *
  * ESPlane Firmware
- * 
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2012 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -22,45 +22,54 @@
  */
 
 #include <string.h>
+
 #include "platform.h"
 
 #define PLATFORM_INFO_OTP_NR_OF_BLOCKS 16
 #define PLATFORM_INFO_OTP_BLOCK_LEN 32
 #if PLATFORM_DEVICE_TYPE_STRING_MAX_LEN < (PLATFORM_INFO_OTP_BLOCK_LEN + 1)
-  #error
+#error
 #endif
 
 
-#define DEFAULT_PLATFORM_STRING "0;EP21"
+#define DEFAULT_PLATFORM_STRING "0;EP20"
 
 
 #ifndef UNIT_TEST_MODE
-static char* getAddressOfOtpMemoryBlock(int blockNr) {
-  //TODO:
-  return (char*)(0x1fff7800 + blockNr * 0x20);
+static char *getAddressOfOtpMemoryBlock(int blockNr)
+{
+    //TODO:
+    //return block adress
+    return (char *)(0x1fff7800 + blockNr * 0x20);
 }
 #else
-  // This function is replaced by a mock in unit tests
-  char* getAddressOfOtpMemoryBlock(const int blockNr);
+// This function is replaced by a mock in unit tests
+char *getAddressOfOtpMemoryBlock(const int blockNr);
 #endif
 
 
 
 
-void platformGetDeviceTypeString(char* deviceTypeString) {
-   char* block = 0;
+void platformGetDeviceTypeString(char *deviceTypeString)
+{
+    char *block = 0;
 
-  // for (int i = 0; i < PLATFORM_INFO_OTP_NR_OF_BLOCKS; i++) {
-  //   char* candidateBlock = getAddressOfOtpMemoryBlock(i);
-  //   if (candidateBlock[0] != 0) {
-  //     block = candidateBlock;
-  //     break;
-  //   }
-  // }
+    /*get platfrom type information from memory block  */
 
-  if (!block || ((unsigned char)block[0]) == 0xff) {
-   block = DEFAULT_PLATFORM_STRING;
-  }
-  strncpy(deviceTypeString, block, PLATFORM_INFO_OTP_BLOCK_LEN);
-  deviceTypeString[PLATFORM_INFO_OTP_BLOCK_LEN] = '\0';
+    //TODO:
+    // for (int i = 0; i < PLATFORM_INFO_OTP_NR_OF_BLOCKS; i++) {
+    //   char* candidateBlock = getAddressOfOtpMemoryBlock(i);
+    //   if (candidateBlock[0] != 0) {
+    //     block = candidateBlock;
+    //     break;
+    //   }
+    // }
+
+    /*use default platform information  */
+    if (!block || ((unsigned char)block[0]) == 0xff) {
+        block = DEFAULT_PLATFORM_STRING;
+    }
+
+    strncpy(deviceTypeString, block, PLATFORM_INFO_OTP_BLOCK_LEN);
+    deviceTypeString[PLATFORM_INFO_OTP_BLOCK_LEN] = '\0';
 }

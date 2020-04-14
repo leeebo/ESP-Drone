@@ -113,7 +113,7 @@ THE SOFTWARE.
 void hmc5883lInit(I2C_Dev *i2cPort);
 bool hmc5883lTestConnection();
 bool hmc5883lSelfTest();
-bool hmc5883lEvaluateSelfTest(int16_t min, int16_t max, int16_t value, char* string);
+bool hmc5883lEvaluateSelfTest(int16_t min, int16_t max, int16_t value, char *string);
 
 // CONFIG_A register
 uint8_t hmc5883lGetSampleAveraging();

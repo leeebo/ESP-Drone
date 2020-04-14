@@ -19,14 +19,13 @@
  * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
  */
 /* pwm3901.c: PMW3901 driver */
-#define DEBUG_MODULE "PMW"
+
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
 #include "pmw3901.h"
 //#include "deck.h"
-#include "debug_cf.h"
 #include "system.h"
 #include "log.h"
 #include "param.h"
@@ -34,7 +33,8 @@
 #include "deck_digital.h"
 #include "deck_spi.h"
 #include "stm32_legacy.h"
-
+#define DEBUG_MODULE "PMW"
+#include "debug_cf.h"
 
 static bool isInit = false;
 

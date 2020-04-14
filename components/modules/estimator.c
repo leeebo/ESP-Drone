@@ -13,20 +13,20 @@ static void initEstimator(const StateEstimatorType estimator);
 static void deinitEstimator(const StateEstimatorType estimator);
 
 typedef struct {
-  void (*init)(void);
-  void (*deinit)(void);
-  bool (*test)(void);
-  void (*update)(state_t *state, sensorData_t *sensors, control_t *control, const uint32_t tick);
-  const char* name;
-  bool (*estimatorEnqueueTDOA)(const tdoaMeasurement_t *uwb);
-  bool (*estimatorEnqueuePosition)(const positionMeasurement_t *pos);
-  bool (*estimatorEnqueuePose)(const poseMeasurement_t *pose);
-  bool (*estimatorEnqueueDistance)(const distanceMeasurement_t *dist);
-  bool (*estimatorEnqueueTOF)(const tofMeasurement_t *tof);
-  bool (*estimatorEnqueueAbsoluteHeight)(const heightMeasurement_t *height);
-  bool (*estimatorEnqueueFlow)(const flowMeasurement_t *flow);
-  bool (*estimatorEnqueueYawError)(const yawErrorMeasurement_t *error);
-  bool (*estimatorEnqueueSweepAngles)(const sweepAngleMeasurement_t *angles);
+    void (*init)(void);
+    void (*deinit)(void);
+    bool (*test)(void);
+    void (*update)(state_t *state, sensorData_t *sensors, control_t *control, const uint32_t tick);
+    const char *name;
+    bool (*estimatorEnqueueTDOA)(const tdoaMeasurement_t *uwb);
+    bool (*estimatorEnqueuePosition)(const positionMeasurement_t *pos);
+    bool (*estimatorEnqueuePose)(const poseMeasurement_t *pose);
+    bool (*estimatorEnqueueDistance)(const distanceMeasurement_t *dist);
+    bool (*estimatorEnqueueTOF)(const tofMeasurement_t *tof);
+    bool (*estimatorEnqueueAbsoluteHeight)(const heightMeasurement_t *height);
+    bool (*estimatorEnqueueFlow)(const flowMeasurement_t *flow);
+    bool (*estimatorEnqueueYawError)(const yawErrorMeasurement_t *error);
+    bool (*estimatorEnqueueSweepAngles)(const sweepAngleMeasurement_t *angles);
 } EstimatorFcns;
 
 #define NOT_IMPLEMENTED ((void*)0)
@@ -81,132 +81,150 @@ static EstimatorFcns estimatorFunctions[] = {
         .estimatorEnqueueSweepAngles = estimatorKalmanEnqueueSweepAngles,
     },
 };
-void stateEstimatorInit(StateEstimatorType estimator) {
-  stateEstimatorSwitchTo(estimator);
+void stateEstimatorInit(StateEstimatorType estimator)
+{
+    stateEstimatorSwitchTo(estimator);
 }
 
-void stateEstimatorSwitchTo(StateEstimatorType estimator) {
-  if (estimator < 0 || estimator >= StateEstimatorTypeCount) {
-    return;
-  }
+void stateEstimatorSwitchTo(StateEstimatorType estimator)
+{
+    if (estimator < 0 || estimator >= StateEstimatorTypeCount) {
+        return;
+    }
 
-  StateEstimatorType newEstimator = estimator;
+    StateEstimatorType newEstimator = estimator;
 
-  if (anyEstimator == newEstimator) {
-    newEstimator = DEFAULT_ESTIMATOR;
-  }
+    if (anyEstimator == newEstimator) {
+        newEstimator = DEFAULT_ESTIMATOR;
+    }
 
-  StateEstimatorType forcedEstimator = ESTIMATOR_NAME;
-  if (forcedEstimator != anyEstimator) {
-    DEBUG_PRINTD("Estimator type forced\n");
-    newEstimator = forcedEstimator;
-  }
+    StateEstimatorType forcedEstimator = ESTIMATOR_NAME;
 
-  initEstimator(newEstimator);
-  StateEstimatorType previousEstimator = currentEstimator;
-  currentEstimator = newEstimator;
-  deinitEstimator(previousEstimator);
+    if (forcedEstimator != anyEstimator) {
+        DEBUG_PRINTD("Estimator type forced\n");
+        newEstimator = forcedEstimator;
+    }
 
-  DEBUG_PRINTD("Using %s (%d) estimator\n", stateEstimatorGetName(), currentEstimator);
+    initEstimator(newEstimator);
+    StateEstimatorType previousEstimator = currentEstimator;
+    currentEstimator = newEstimator;
+    deinitEstimator(previousEstimator);
+
+    DEBUG_PRINTD("Using %s (%d) estimator\n", stateEstimatorGetName(), currentEstimator);
 }
 
-StateEstimatorType getStateEstimator(void) {
-  return currentEstimator;
+StateEstimatorType getStateEstimator(void)
+{
+    return currentEstimator;
 }
 
-static void initEstimator(const StateEstimatorType estimator) {
-  if (estimatorFunctions[estimator].init) {
-    estimatorFunctions[estimator].init();
-  }
+static void initEstimator(const StateEstimatorType estimator)
+{
+    if (estimatorFunctions[estimator].init) {
+        estimatorFunctions[estimator].init();
+    }
 }
 
-static void deinitEstimator(const StateEstimatorType estimator) {
-  if (estimatorFunctions[estimator].deinit) {
-    estimatorFunctions[estimator].deinit();
-  }
+static void deinitEstimator(const StateEstimatorType estimator)
+{
+    if (estimatorFunctions[estimator].deinit) {
+        estimatorFunctions[estimator].deinit();
+    }
 }
 
-bool stateEstimatorTest(void) {
-  return estimatorFunctions[currentEstimator].test();
+bool stateEstimatorTest(void)
+{
+    return estimatorFunctions[currentEstimator].test();
 }
 
-void stateEstimator(state_t *state, sensorData_t *sensors, control_t *control, const uint32_t tick) {
-  estimatorFunctions[currentEstimator].update(state, sensors, control, tick);
+void stateEstimator(state_t *state, sensorData_t *sensors, control_t *control, const uint32_t tick)
+{
+    estimatorFunctions[currentEstimator].update(state, sensors, control, tick);
 }
 
-const char* stateEstimatorGetName() {
-  return estimatorFunctions[currentEstimator].name;
+const char *stateEstimatorGetName()
+{
+    return estimatorFunctions[currentEstimator].name;
 }
 
 
-bool estimatorEnqueueTDOA(const tdoaMeasurement_t *uwb) {
-  if (estimatorFunctions[currentEstimator].estimatorEnqueueTDOA) {
-    return estimatorFunctions[currentEstimator].estimatorEnqueueTDOA(uwb);
-  }
+bool estimatorEnqueueTDOA(const tdoaMeasurement_t *uwb)
+{
+    if (estimatorFunctions[currentEstimator].estimatorEnqueueTDOA) {
+        return estimatorFunctions[currentEstimator].estimatorEnqueueTDOA(uwb);
+    }
 
-  return false;
+    return false;
 }
 
-bool estimatorEnqueueYawError(const yawErrorMeasurement_t* error) {
-  if (estimatorFunctions[currentEstimator].estimatorEnqueueYawError) {
-    return estimatorFunctions[currentEstimator].estimatorEnqueueYawError(error);
-  }
+bool estimatorEnqueueYawError(const yawErrorMeasurement_t *error)
+{
+    if (estimatorFunctions[currentEstimator].estimatorEnqueueYawError) {
+        return estimatorFunctions[currentEstimator].estimatorEnqueueYawError(error);
+    }
 
-  return false;
+    return false;
 }
 
-bool estimatorEnqueuePosition(const positionMeasurement_t *pos) {
-  if (estimatorFunctions[currentEstimator].estimatorEnqueuePosition) {
-    return estimatorFunctions[currentEstimator].estimatorEnqueuePosition(pos);
-  }
+bool estimatorEnqueuePosition(const positionMeasurement_t *pos)
+{
+    if (estimatorFunctions[currentEstimator].estimatorEnqueuePosition) {
+        return estimatorFunctions[currentEstimator].estimatorEnqueuePosition(pos);
+    }
 
-  return false;
+    return false;
 }
 
-bool estimatorEnqueuePose(const poseMeasurement_t *pose) {
-  if (estimatorFunctions[currentEstimator].estimatorEnqueuePose) {
-    return estimatorFunctions[currentEstimator].estimatorEnqueuePose(pose);
-  }
+bool estimatorEnqueuePose(const poseMeasurement_t *pose)
+{
+    if (estimatorFunctions[currentEstimator].estimatorEnqueuePose) {
+        return estimatorFunctions[currentEstimator].estimatorEnqueuePose(pose);
+    }
 
-  return false;
+    return false;
 }
 
-bool estimatorEnqueueDistance(const distanceMeasurement_t *dist) {
-  if (estimatorFunctions[currentEstimator].estimatorEnqueueDistance) {
-    return estimatorFunctions[currentEstimator].estimatorEnqueueDistance(dist);
-  }
+bool estimatorEnqueueDistance(const distanceMeasurement_t *dist)
+{
+    if (estimatorFunctions[currentEstimator].estimatorEnqueueDistance) {
+        return estimatorFunctions[currentEstimator].estimatorEnqueueDistance(dist);
+    }
 
-  return false;
+    return false;
 }
 
-bool estimatorEnqueueTOF(const tofMeasurement_t *tof) {
-  if (estimatorFunctions[currentEstimator].estimatorEnqueueTOF) {
-    return estimatorFunctions[currentEstimator].estimatorEnqueueTOF(tof);
-  }
+bool estimatorEnqueueTOF(const tofMeasurement_t *tof)
+{
+    if (estimatorFunctions[currentEstimator].estimatorEnqueueTOF) {
+        return estimatorFunctions[currentEstimator].estimatorEnqueueTOF(tof);
+    }
 
-  return false;
+    return false;
 }
 
-bool estimatorEnqueueAbsoluteHeight(const heightMeasurement_t *height) {
-  if (estimatorFunctions[currentEstimator].estimatorEnqueueAbsoluteHeight) {
-    return estimatorFunctions[currentEstimator].estimatorEnqueueAbsoluteHeight(height);
-  }
+bool estimatorEnqueueAbsoluteHeight(const heightMeasurement_t *height)
+{
+    if (estimatorFunctions[currentEstimator].estimatorEnqueueAbsoluteHeight) {
+        return estimatorFunctions[currentEstimator].estimatorEnqueueAbsoluteHeight(height);
+    }
 
-  return false;
+    return false;
 }
 
-bool estimatorEnqueueFlow(const flowMeasurement_t *flow) {
-  if (estimatorFunctions[currentEstimator].estimatorEnqueueFlow) {
-    return estimatorFunctions[currentEstimator].estimatorEnqueueFlow(flow);
-  }
+bool estimatorEnqueueFlow(const flowMeasurement_t *flow)
+{
+    if (estimatorFunctions[currentEstimator].estimatorEnqueueFlow) {
+        return estimatorFunctions[currentEstimator].estimatorEnqueueFlow(flow);
+    }
 
-  return false;
+    return false;
 }
 
-bool estimatorEnqueueSweepAngles(const sweepAngleMeasurement_t *angles) {
-  if (estimatorFunctions[currentEstimator].estimatorEnqueueSweepAngles) {
-    return estimatorFunctions[currentEstimator].estimatorEnqueueSweepAngles(angles);
-  }
+bool estimatorEnqueueSweepAngles(const sweepAngleMeasurement_t *angles)
+{
+    if (estimatorFunctions[currentEstimator].estimatorEnqueueSweepAngles) {
+        return estimatorFunctions[currentEstimator].estimatorEnqueueSweepAngles(angles);
+    }
 
-  return false;
+    return false;
 }

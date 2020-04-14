@@ -1,8 +1,8 @@
 /**
  *
  * ESPlane Firmware
- * 
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2012 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -24,14 +24,12 @@
 
 #include <stdbool.h>
 
-#include "stm32_legacy.h"
-
-#include "piezo.h"
-#include "motors.h"
-
-//FreeRTOS includes
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+
+#include "stm32_legacy.h"
+#include "piezo.h"
+#include "motors.h"
 
 // HW defines
 #define PIEZO_TIM_PERIF       RCC_APB1Periph_TIM5
@@ -40,11 +38,11 @@
 #define PIEZO_TIM_SETCOMPARE  TIM_SetCompare2
 #define PIEZO_TIM_GETCAPTURE  TIM_GetCapture2
 
-#define BUZ_PWM_CH1  0      
-#define BUZ_PWM_CH2  1 
+#define BUZ_PWM_CH1  0
+#define BUZ_PWM_CH2  1
 
-#define PIEZO_GPIO_POS_PIN           27 
-#define PIEZO_GPIO_NEG_PIN           26 
+#define PIEZO_GPIO_POS_PIN           27
+#define PIEZO_GPIO_NEG_PIN           26
 
 
 #define PIEZO_PWM_BITS      (8)
@@ -57,67 +55,70 @@
 static bool isInit = false;
 
 ledc_channel_config_t buzz_channel[2] = {
-      {.channel = BUZ_PWM_CH1,
-       .duty = 0,
-       .gpio_num = PIEZO_GPIO_POS_PIN,
-       .speed_mode = LEDC_HIGH_SPEED_MODE,
-       .timer_sel = LEDC_TIMER_1
+    {
+        .channel = BUZ_PWM_CH1,
+        .duty = 0,
+        .gpio_num = PIEZO_GPIO_POS_PIN,
+        .speed_mode = LEDC_HIGH_SPEED_MODE,
+        .timer_sel = LEDC_TIMER_1
 
-      },
-      {.channel = BUZ_PWM_CH2,
-       .duty = 0,
-       .gpio_num = PIEZO_GPIO_NEG_PIN,
-       .speed_mode = LEDC_HIGH_SPEED_MODE,
-       .timer_sel = LEDC_TIMER_1
+    },
+    {
+        .channel = BUZ_PWM_CH2,
+        .duty = 0,
+        .gpio_num = PIEZO_GPIO_NEG_PIN,
+        .speed_mode = LEDC_HIGH_SPEED_MODE,
+        .timer_sel = LEDC_TIMER_1
 
-      },
+    },
 };
 
 /* Public functions */
 
 void piezoInit()
 {
-  if (isInit)
-    return;
+    if (isInit) {
+        return;
+    }
 
-  //Clock the gpio and the timers
-  ledc_timer_config_t ledc_timer = {
-      .duty_resolution = PIEZO_PWM_BITS, // resolution of PWM duty
-      .freq_hz = 4000,                     // frequency of PWM signal
-      .speed_mode = LEDC_HIGH_SPEED_MODE,   // timer mode
-      .timer_num = LEDC_TIMER_0,            // timer index
-                                            // .clk_cfg = LEDC_AUTO_CLK,              // Auto select the source clock
-  };
-  // Set configuration of timer0 for high speed channels
-  if(ledc_timer_config(&ledc_timer)==ESP_OK){
+    //Clock the gpio and the timers
+    ledc_timer_config_t ledc_timer = {
+        .duty_resolution = PIEZO_PWM_BITS, // resolution of PWM duty
+        .freq_hz = 4000,                     // frequency of PWM signal
+        .speed_mode = LEDC_HIGH_SPEED_MODE,   // timer mode
+        .timer_num = LEDC_TIMER_0,            // timer index
+        // .clk_cfg = LEDC_AUTO_CLK,              // Auto select the source clock
+    };
 
-  }
+    // Set configuration of timer0 for high speed channels
+    if (ledc_timer_config(&ledc_timer) == ESP_OK) {
 
-  for (uint8_t i = 0; i < 2; i++)
-  {
-    ledc_channel_config(&buzz_channel[i]);
-  }
+    }
 
-  isInit = true;
+    for (uint8_t i = 0; i < 2; i++) {
+        ledc_channel_config(&buzz_channel[i]);
+    }
+
+    isInit = true;
 }
 
 bool piezoTest(void)
 {
-  return isInit;
+    return isInit;
 }
 
 void piezoSetRatio(uint8_t ratio)
 {
-  ledc_set_duty(buzz_channel[0].speed_mode, buzz_channel[0].channel, ratio);
-  ledc_update_duty(buzz_channel[0].speed_mode, buzz_channel[0].channel);
+    ledc_set_duty(buzz_channel[0].speed_mode, buzz_channel[0].channel, ratio);
+    ledc_update_duty(buzz_channel[0].speed_mode, buzz_channel[0].channel);
 
-  ledc_set_duty(buzz_channel[1].speed_mode, buzz_channel[1].channel, PIEZO_PWM_PERIOD-ratio);
-  ledc_update_duty(buzz_channel[1].speed_mode, buzz_channel[1].channel);
+    ledc_set_duty(buzz_channel[1].speed_mode, buzz_channel[1].channel, PIEZO_PWM_PERIOD - ratio);
+    ledc_update_duty(buzz_channel[1].speed_mode, buzz_channel[1].channel);
 
 }
 
 void piezoSetFreq(uint16_t freq)
 {
-  ledc_set_freq(buzz_channel[0].speed_mode,buzz_channel[0].timer_sel,freq);
+    ledc_set_freq(buzz_channel[0].speed_mode, buzz_channel[0].timer_sel, freq);
 
 }

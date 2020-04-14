@@ -1,6 +1,7 @@
 menu "ESPlane2.0 config"
     config ENABLE_LEGACY_APP
         bool "Enable legacy ESPlane1.0 APP"
+        default 0
         help
             This enables the udp_server_rx2_task of wifi_esp32.
     menu "calibration angle"

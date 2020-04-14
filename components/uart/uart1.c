@@ -1,8 +1,8 @@
 /**
 *
  * ESPlane Firmware
- * 
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2012 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -27,13 +27,12 @@
 #include "freertos/semphr.h"
 
 #include "stm32_legacy.h"
-
 #include "config.h"
 //#include "nvic.h"
 #include "uart1.h"
 #include "cfassert.h"
 #include "config.h"
- #include "nvicconf.h"
+#include "nvicconf.h"
 
 /** This uart is conflicting with SPI2 DMA used in sensors_bmi088_spi_bmp388.c
  *  which is used in CF-RZR. So for other products this can be enabled.
@@ -61,9 +60,9 @@ static uint32_t initialDMACount;
 static void uart1DmaInit(void)
 {
 #ifdef ENABLE_UART1_DMA
-  // TODO:
+    // TODO:
 
-  isUartDmaInitialized = true;
+    isUartDmaInitialized = true;
 #endif
 }
 
@@ -73,29 +72,30 @@ void uart1Init(const uint32_t baudrate)
 
     uart1queue = xQueueCreate(64, sizeof(uint8_t));
 
-  isInit = true;
+    isInit = true;
 }
 
 bool uart1Test(void)
 {
-  return isInit;
+    return isInit;
 }
 
 bool uart1GetDataWithTimout(uint8_t *c)
 {
-  if (xQueueReceive(uart1queue, c, UART1_DATA_TIMEOUT_TICKS) == pdTRUE)
-  {
-    return true;
-  }
+    if (xQueueReceive(uart1queue, c, UART1_DATA_TIMEOUT_TICKS) == pdTRUE) {
+        return true;
+    }
 
-  *c = 0;
-  return false;
+    *c = 0;
+    return false;
 }
 
-void uart1SendData(uint32_t size, uint8_t* data)
+void uart1SendData(uint32_t size, uint8_t *data)
 {
-  if (!isInit)
-    return;
+    if (!isInit) {
+        return;
+    }
+
 //TODO:
 
 }
@@ -107,21 +107,21 @@ void uart1SendData(uint32_t size, uint8_t* data)
 int uart1Putchar(int ch)
 {
     uart1SendData(1, (uint8_t *)&ch);
-    
+
     return (unsigned char)ch;
 }
 
-void uart1Getchar(char * ch)
+void uart1Getchar(char *ch)
 {
-  xQueueReceive(uart1queue, ch, portMAX_DELAY);
+    xQueueReceive(uart1queue, ch, portMAX_DELAY);
 }
 
 bool uart1DidOverrun()
 {
-  bool result = hasOverrun;
-  hasOverrun = false;
+    bool result = hasOverrun;
+    hasOverrun = false;
 
-  return result;
+    return result;
 }
 
 #ifdef ENABLE_UART1_DMA

@@ -1,8 +1,8 @@
 /**
  *
  * ESPlane Firmware
- * 
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2012 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -56,141 +56,135 @@ static void addBufferFullMarker();
 static bool consoleSendMessage(void)
 {
 
-  if (crtpSendPacket(&messageToPrint) == pdTRUE)
-  {
-    messageToPrint.size = 0;
-    messageSendingIsPending = false;
-  }
-  else
-  {
-    return false;
-  }
+    if (crtpSendPacket(&messageToPrint) == pdTRUE) {
+        messageToPrint.size = 0;
+        messageSendingIsPending = false;
+    } else {
+        return false;
+    }
 
-  return true;
+    return true;
 }
 
 void consoleInit()
 {
-  if (isInit)
-    return;
+    if (isInit) {
+        return;
+    }
 
-  messageToPrint.size = 0;
-  messageToPrint.header = CRTP_HEADER(CRTP_PORT_CONSOLE, 0);
-  vSemaphoreCreateBinary(synch);
-  messageSendingIsPending = false;
+    messageToPrint.size = 0;
+    messageToPrint.header = CRTP_HEADER(CRTP_PORT_CONSOLE, 0);
+    vSemaphoreCreateBinary(synch);
+    messageSendingIsPending = false;
 
-  isInit = true;
+    isInit = true;
 }
 
 bool consoleTest(void)
 {
-  return isInit;
+    return isInit;
 }
 
 int consolePutchar(int ch)
 {
-  //TODO: test if have interrupt
-  bool isInInterrupt = false;
-  //bool isInInterrupt = (SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) != 0;
+    //TODO: test if have interrupt
+    bool isInInterrupt = false;
+    //bool isInInterrupt = (SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) != 0;
 
-  if (!isInit) {
-    return 0;
-  }
-
-  if (isInInterrupt) {
-    return consolePutcharFromISR(ch);
-  }
-
-  if (xSemaphoreTake(synch, portMAX_DELAY) == pdTRUE)
-  {
-    // Try to send if we already have a pending message
-    if (messageSendingIsPending) 
-    {
-      consoleSendMessage();
+    if (!isInit) {
+        return 0;
     }
 
-    if (! messageSendingIsPending) 
-    {
-      if (messageToPrint.size < CRTP_MAX_DATA_SIZE)
-      {
-        messageToPrint.data[messageToPrint.size] = (unsigned char)ch;
-        messageToPrint.size++;
-      }
+    if (isInInterrupt) {
+        return consolePutcharFromISR(ch);
+    }
 
-      if (ch == '\n' || messageToPrint.size >= CRTP_MAX_DATA_SIZE)
-      {
-        if (crtpGetFreeTxQueuePackets() == 1)
-        {
-          addBufferFullMarker();
+    if (xSemaphoreTake(synch, portMAX_DELAY) == pdTRUE) {
+        // Try to send if we already have a pending message
+        if (messageSendingIsPending) {
+            consoleSendMessage();
         }
-        messageSendingIsPending = true;
-        consoleSendMessage();
-      }
-    }
-    xSemaphoreGive(synch);
-  }
 
-  return (unsigned char)ch;
+        if (! messageSendingIsPending) {
+            if (messageToPrint.size < CRTP_MAX_DATA_SIZE) {
+                messageToPrint.data[messageToPrint.size] = (unsigned char)ch;
+                messageToPrint.size++;
+            }
+
+            if (ch == '\n' || messageToPrint.size >= CRTP_MAX_DATA_SIZE) {
+                if (crtpGetFreeTxQueuePackets() == 1) {
+                    addBufferFullMarker();
+                }
+
+                messageSendingIsPending = true;
+                consoleSendMessage();
+            }
+        }
+
+        xSemaphoreGive(synch);
+    }
+
+    return (unsigned char)ch;
 }
 
-int consolePutcharFromISR(int ch) {
-  BaseType_t higherPriorityTaskWoken;
+int consolePutcharFromISR(int ch)
+{
+    BaseType_t higherPriorityTaskWoken;
 
-  if (xSemaphoreTakeFromISR(synch, &higherPriorityTaskWoken) == pdTRUE) {
-    if (messageToPrint.size < CRTP_MAX_DATA_SIZE)
-    {
-      messageToPrint.data[messageToPrint.size] = (unsigned char)ch;
-      messageToPrint.size++;
+    if (xSemaphoreTakeFromISR(synch, &higherPriorityTaskWoken) == pdTRUE) {
+        if (messageToPrint.size < CRTP_MAX_DATA_SIZE) {
+            messageToPrint.data[messageToPrint.size] = (unsigned char)ch;
+            messageToPrint.size++;
+        }
+
+        xSemaphoreGiveFromISR(synch, &higherPriorityTaskWoken);
     }
-    xSemaphoreGiveFromISR(synch, &higherPriorityTaskWoken);
-  }
 
-  return ch;
+    return ch;
 }
 
 int consolePuts(char *str)
 {
-  int ret = 0;
+    int ret = 0;
 
-  while(*str)
-    ret |= consolePutchar(*str++);
+    while (*str) {
+        ret |= consolePutchar(*str++);
+    }
 
-  return ret;
+    return ret;
 }
 
 void consoleFlush(void)
 {
-  if (xSemaphoreTake(synch, portMAX_DELAY) == pdTRUE)
-  {
-    consoleSendMessage();
-    xSemaphoreGive(synch);
-  }
+    if (xSemaphoreTake(synch, portMAX_DELAY) == pdTRUE) {
+        consoleSendMessage();
+        xSemaphoreGive(synch);
+    }
 }
 
 
 static int findMarkerStart()
 {
-  int start = messageToPrint.size;
-  
-  // If last char is new line, rewind one char since the marker contains a new line.
-  if (start > 0 && messageToPrint.data[start - 1] == '\n')
-  {
-    start -= 1;
-  }
+    int start = messageToPrint.size;
 
-  return start;
+    // If last char is new line, rewind one char since the marker contains a new line.
+    if (start > 0 && messageToPrint.data[start - 1] == '\n') {
+        start -= 1;
+    }
+
+    return start;
 }
 
 static void addBufferFullMarker()
 {
-  // Try to add the marker after the message if it fits in the buffer, otherwise overwrite the end of the message 
-  int endMarker = findMarkerStart() + sizeof(bufferFullMsg);
-  if (endMarker >= (CRTP_MAX_DATA_SIZE)) 
-  {
-    endMarker = CRTP_MAX_DATA_SIZE;
-  }
+    // Try to add the marker after the message if it fits in the buffer, otherwise overwrite the end of the message
+    int endMarker = findMarkerStart() + sizeof(bufferFullMsg);
 
-  int startMarker = endMarker - sizeof(bufferFullMsg);
-  memcpy(&messageToPrint.data[startMarker], bufferFullMsg, sizeof(bufferFullMsg));
-  messageToPrint.size = startMarker + sizeof(bufferFullMsg);
+    if (endMarker >= (CRTP_MAX_DATA_SIZE)) {
+        endMarker = CRTP_MAX_DATA_SIZE;
+    }
+
+    int startMarker = endMarker - sizeof(bufferFullMsg);
+    memcpy(&messageToPrint.data[startMarker], bufferFullMsg, sizeof(bufferFullMsg));
+    messageToPrint.size = startMarker + sizeof(bufferFullMsg);
 }

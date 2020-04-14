@@ -1,11 +1,10 @@
 #ifndef ESP32_BRIDGE_H
 #define ESP32_BRIDGE_H
 
-#include "sdkconfig.h"
 #include "esp_err.h"
-#include "debug_cf.h"
 #include "driver/gpio.h"
 #include "freertos/portmacro.h"
+
 #include "cfassert.h"
 
 #ifndef __cplusplus
@@ -19,19 +18,18 @@ typedef enum {DISABLE = 0, ENABLE = !DISABLE} FunctionalState;
 
 typedef enum {ERROR = 0, SUCCESS = !ERROR} ErrorStatus;
 
-typedef struct
-{
+typedef struct {
 
-}GPIO_TypeDef;
+} GPIO_TypeDef;
 
 //freertosconfig
-typedef void DMA_Stream_TypeDef;  //stm32f103未定义
-typedef int DMA_InitTypeDef; //stm32f103未定义
-typedef void * xSemaphoreHandle;
-typedef void * SemaphoreHandle_t;
-typedef void * xQueueHandle;
-typedef void * QueueHandle_t;
-typedef void * TaskHandle_t;
+typedef void DMA_Stream_TypeDef;
+typedef int DMA_InitTypeDef;
+typedef void *xSemaphoreHandle;
+typedef void *SemaphoreHandle_t;
+typedef void *xQueueHandle;
+typedef void *QueueHandle_t;
+typedef void *TaskHandle_t;
 typedef void TIM_TypeDef;
 typedef void TIM_OCInitTypeDef;
 typedef uint32_t TickType_t;
@@ -48,10 +46,10 @@ typedef uint32_t portTickType;
 #define M_PI 3.14159265358979323846
 #endif
 
-typedef enum
-{ Bit_RESET = 0,
-  Bit_SET
-}BitAction;
+typedef enum {
+    Bit_RESET = 0,
+    Bit_SET
+} BitAction;
 
 #define __IO
 
@@ -79,10 +77,8 @@ typedef enum
 #define S2T(X) ((portTickType)((X) * configTICK_RATE_HZ))
 #define T2S(X) ((X) / (float)configTICK_RATE_HZ)
 
-//#define DEBUG_PRINTD printf
-
 #define assert_param(e)  if (e) ; \
-        else assertFail( #e, __FILE__, __LINE__ )
+    else assertFail( #e, __FILE__, __LINE__ )
 
 uint64_t usecTimestamp(void);
 

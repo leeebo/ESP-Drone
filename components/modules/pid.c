@@ -1,8 +1,8 @@
 /**
  *
  * ESPlane Firmware
- * 
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2012 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -26,35 +26,34 @@
 #include <math.h>
 #include <float.h>
 
-void pidInit(PidObject* pid, const float desired, const float kp,
+void pidInit(PidObject *pid, const float desired, const float kp,
              const float ki, const float kd, const float dt,
              const float samplingRate, const float cutoffFreq,
              bool enableDFilter)
 {
-  pid->error         = 0;
-  pid->prevError     = 0;
-  pid->integ         = 0;
-  pid->deriv         = 0;
-  pid->desired       = desired;
-  pid->kp            = kp;
-  pid->ki            = ki;
-  pid->kd            = kd;
-  pid->iLimit        = DEFAULT_PID_INTEGRATION_LIMIT;
-  pid->outputLimit   = DEFAULT_PID_OUTPUT_LIMIT;
-  pid->dt            = dt;
-  pid->enableDFilter = enableDFilter;
-  if (pid->enableDFilter)
-  {
-    lpf2pInit(&pid->dFilter, samplingRate, cutoffFreq);
-  }
+    pid->error         = 0;
+    pid->prevError     = 0;
+    pid->integ         = 0;
+    pid->deriv         = 0;
+    pid->desired       = desired;
+    pid->kp            = kp;
+    pid->ki            = ki;
+    pid->kd            = kd;
+    pid->iLimit        = DEFAULT_PID_INTEGRATION_LIMIT;
+    pid->outputLimit   = DEFAULT_PID_OUTPUT_LIMIT;
+    pid->dt            = dt;
+    pid->enableDFilter = enableDFilter;
+
+    if (pid->enableDFilter) {
+        lpf2pInit(&pid->dFilter, samplingRate, cutoffFreq);
+    }
 }
 
-float pidUpdate(PidObject* pid, const float measured, const bool updateError)
+float pidUpdate(PidObject *pid, const float measured, const bool updateError)
 {
     float output = 0.0f;
 
-    if (updateError)
-    {
+    if (updateError) {
         pid->error = pid->desired - measured;
     }
 
@@ -62,33 +61,33 @@ float pidUpdate(PidObject* pid, const float measured, const bool updateError)
     output += pid->outP;
 
     float deriv = (pid->error - pid->prevError) / pid->dt;
-    if (pid->enableDFilter)
-    {
-      pid->deriv = lpf2pApply(&pid->dFilter, deriv);
+
+    if (pid->enableDFilter) {
+        pid->deriv = lpf2pApply(&pid->dFilter, deriv);
     } else {
-      pid->deriv = deriv;
+        pid->deriv = deriv;
     }
+
     if (isnan(pid->deriv)) {
-      pid->deriv = 0;
+        pid->deriv = 0;
     }
+
     pid->outD = pid->kd * pid->deriv;
     output += pid->outD;
 
     pid->integ += pid->error * pid->dt;
 
     // Constrain the integral (unless the iLimit is zero)
-    if(pid->iLimit != 0)
-    {
-    	pid->integ = constrain(pid->integ, -pid->iLimit, pid->iLimit);
+    if (pid->iLimit != 0) {
+        pid->integ = constrain(pid->integ, -pid->iLimit, pid->iLimit);
     }
 
     pid->outI = pid->ki * pid->integ;
     output += pid->outI;
 
     // Constrain the total PID output (unless the outputLimit is zero)
-    if(pid->outputLimit != 0)
-    {
-      output = constrain(output, -pid->outputLimit, pid->outputLimit);
+    if (pid->outputLimit != 0) {
+        output = constrain(output, -pid->outputLimit, pid->outputLimit);
     }
 
 
@@ -97,60 +96,61 @@ float pidUpdate(PidObject* pid, const float measured, const bool updateError)
     return output;
 }
 
-void pidSetIntegralLimit(PidObject* pid, const float limit) {
+void pidSetIntegralLimit(PidObject *pid, const float limit)
+{
     pid->iLimit = limit;
 }
 
 
-void pidReset(PidObject* pid)
+void pidReset(PidObject *pid)
 {
-  pid->error     = 0;
-  pid->prevError = 0;
-  pid->integ     = 0;
-  pid->deriv     = 0;
+    pid->error     = 0;
+    pid->prevError = 0;
+    pid->integ     = 0;
+    pid->deriv     = 0;
 }
 
-void pidSetError(PidObject* pid, const float error)
+void pidSetError(PidObject *pid, const float error)
 {
-  pid->error = error;
+    pid->error = error;
 }
 
-void pidSetDesired(PidObject* pid, const float desired)
+void pidSetDesired(PidObject *pid, const float desired)
 {
-  pid->desired = desired;
+    pid->desired = desired;
 }
 
-float pidGetDesired(PidObject* pid)
+float pidGetDesired(PidObject *pid)
 {
-  return pid->desired;
+    return pid->desired;
 }
 
-bool pidIsActive(PidObject* pid)
+bool pidIsActive(PidObject *pid)
 {
-  bool isActive = true;
+    bool isActive = true;
 
-  if (pid->kp < 0.0001f && pid->ki < 0.0001f && pid->kd < 0.0001f)
-  {
-    isActive = false;
-  }
+    if (pid->kp < 0.0001f && pid->ki < 0.0001f && pid->kd < 0.0001f) {
+        isActive = false;
+    }
 
-  return isActive;
+    return isActive;
 }
 
-void pidSetKp(PidObject* pid, const float kp)
+void pidSetKp(PidObject *pid, const float kp)
 {
-  pid->kp = kp;
+    pid->kp = kp;
 }
 
-void pidSetKi(PidObject* pid, const float ki)
+void pidSetKi(PidObject *pid, const float ki)
 {
-  pid->ki = ki;
+    pid->ki = ki;
 }
 
-void pidSetKd(PidObject* pid, const float kd)
+void pidSetKd(PidObject *pid, const float kd)
 {
-  pid->kd = kd;
+    pid->kd = kd;
 }
-void pidSetDt(PidObject* pid, const float dt) {
+void pidSetDt(PidObject *pid, const float dt)
+{
     pid->dt = dt;
 }

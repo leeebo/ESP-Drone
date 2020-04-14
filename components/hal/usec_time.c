@@ -1,8 +1,8 @@
 /**
 *
  * ESPlane Firmware
- * 
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2013 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -33,9 +33,7 @@ void initUsecTimer(void)
 
 uint64_t usecTimestamp(void)
 {
-
     return (uint64_t)esp_timer_get_time();
-
 }
 
 

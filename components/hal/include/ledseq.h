@@ -1,8 +1,8 @@
 /**
  *
  * ESPlane Firmware
- * 
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2012 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -48,8 +48,8 @@
 #define LEDSEQ_STOP      -1
 #define LEDSEQ_LOOP      -2
 typedef struct {
-  bool value;
-  int action;
+    bool value;
+    int action;
 } ledseq_t;
 
 //Public API
@@ -57,8 +57,8 @@ void ledseqInit(void);
 bool ledseqTest(void);
 
 void ledseqEnable(bool enable);
-void ledseqRun(led_t led, const ledseq_t * sequence);
-void ledseqStop(led_t led, const ledseq_t * sequence);
+void ledseqRun(led_t led, const ledseq_t *sequence);
+void ledseqStop(led_t led, const ledseq_t *sequence);
 void ledseqSetTimes(ledseq_t *sequence, int32_t onTime, int32_t offTime);
 
 //Existing led sequences

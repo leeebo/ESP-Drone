@@ -1,0 +1,21 @@
+{
+	"astyle.executable": "astyle",
+	"astyle.additional_languages": [
+	"c",
+	"cpp",
+	],
+	"astyle.cmd_options": [
+	"-A10s4SNwm2M40fpHUjk3n",
+	],
+	"[c]": {
+	"editor.defaultFormatter": "chiehyu.vscode-astyle"
+	},
+	"files.associations": {
+		"freertos.h": "c",
+		"uart1.h": "c",
+		"queuemonitor.h": "c",
+		"deck_spi.h": "c",
+		"eprintf.h": "c",
+		"adc_esp32.h": "c"
+	},
+}

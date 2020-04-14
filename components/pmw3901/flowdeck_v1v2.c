@@ -1,5 +1,5 @@
 /*
- * 
+ *
  *
  * LPS node firmware.
  *
@@ -48,9 +48,9 @@
 
 #if defined(USE_MA_SMOOTHING)
 static struct {
-  float32_t averageX[AVERAGE_HISTORY_LENGTH];
-  float32_t averageY[AVERAGE_HISTORY_LENGTH];
-  size_t ptr;
+    float32_t averageX[AVERAGE_HISTORY_LENGTH];
+    float32_t averageY[AVERAGE_HISTORY_LENGTH];
+    size_t ptr;
 } pixelAverages;
 #endif
 
@@ -67,155 +67,96 @@ motionBurst_t currentMotion;
 // Disables pushing the flow measurement in the EKF
 static bool useFlowDisabled = false;
 
-#define NCS_PIN 15 
+#define NCS_PIN 15
 
 static void flowdeckTask(void *param)
 {
-  systemWaitStart();
+    systemWaitStart();
 
-  while(1) {
-    vTaskDelay(10);
+    while (1) {
+        vTaskDelay(10);
 
-    pmw3901ReadMotion(NCS_PIN, &currentMotion);
+        pmw3901ReadMotion(NCS_PIN, &currentMotion);
 
-    // Flip motion information to comply with sensor mounting
-    // (might need to be changed if mounted differently)
-    int16_t accpx = currentMotion.deltaY;
-    int16_t accpy = currentMotion.deltaX;
+        // Flip motion information to comply with sensor mounting
+        // (might need to be changed if mounted differently)
+        int16_t accpx = currentMotion.deltaY;
+        int16_t accpy = currentMotion.deltaX;
 
-    // Outlier removal
-    if (abs(accpx) < OULIER_LIMIT && abs(accpy) < OULIER_LIMIT) {
+        // Outlier removal
+        if (abs(accpx) < OULIER_LIMIT && abs(accpy) < OULIER_LIMIT) {
 
-      // Form flow measurement struct and push into the EKF
-      flowMeasurement_t flowData;
-      flowData.stdDevX = 0.25;    // [pixels] should perhaps be made larger?
-      flowData.stdDevY = 0.25;    // [pixels] should perhaps be made larger?
-      flowData.dt = 0.01;
+            // Form flow measurement struct and push into the EKF
+            flowMeasurement_t flowData;
+            flowData.stdDevX = 0.25;    // [pixels] should perhaps be made larger?
+            flowData.stdDevY = 0.25;    // [pixels] should perhaps be made larger?
+            flowData.dt = 0.01;
 
 #if defined(USE_MA_SMOOTHING)
-      // Use MA Smoothing
-      pixelAverages.averageX[pixelAverages.ptr] = (float32_t)accpx;
-      pixelAverages.averageY[pixelAverages.ptr] = (float32_t)accpy;
+            // Use MA Smoothing
+            pixelAverages.averageX[pixelAverages.ptr] = (float32_t)accpx;
+            pixelAverages.averageY[pixelAverages.ptr] = (float32_t)accpy;
 
-      float32_t meanX;
-      float32_t meanY;
+            float32_t meanX;
+            float32_t meanY;
 
-      xtensa_mean_f32(pixelAverages.averageX, AVERAGE_HISTORY_LENGTH, &meanX);
-      xtensa_mean_f32(pixelAverages.averageY, AVERAGE_HISTORY_LENGTH, &meanY);
+            xtensa_mean_f32(pixelAverages.averageX, AVERAGE_HISTORY_LENGTH, &meanX);
+            xtensa_mean_f32(pixelAverages.averageY, AVERAGE_HISTORY_LENGTH, &meanY);
 
-      pixelAverages.ptr = (pixelAverages.ptr + 1) % AVERAGE_HISTORY_LENGTH;
+            pixelAverages.ptr = (pixelAverages.ptr + 1) % AVERAGE_HISTORY_LENGTH;
 
-      flowData.dpixelx = (float)meanX;   // [pixels]
-      flowData.dpixely = (float)meanY;   // [pixels]
+            flowData.dpixelx = (float)meanX;   // [pixels]
+            flowData.dpixely = (float)meanY;   // [pixels]
 #elif defined(USE_LP_FILTER)
-      // Use LP filter measurements
-      flowData.dpixelx = LP_CONSTANT * dpixelx_previous + (1.0f - LP_CONSTANT) * (float)accpx;
-      flowData.dpixely = LP_CONSTANT * dpixely_previous + (1.0f - LP_CONSTANT) * (float)accpy;
-      dpixelx_previous = flowData.dpixelx;
-      dpixely_previous = flowData.dpixely;
+            // Use LP filter measurements
+            flowData.dpixelx = LP_CONSTANT * dpixelx_previous + (1.0f - LP_CONSTANT) * (float)accpx;
+            flowData.dpixely = LP_CONSTANT * dpixely_previous + (1.0f - LP_CONSTANT) * (float)accpy;
+            dpixelx_previous = flowData.dpixelx;
+            dpixely_previous = flowData.dpixely;
 #else
-      // Use raw measurements
-      flowData.dpixelx = (float)accpx;
-      flowData.dpixely = (float)accpy;
+            // Use raw measurements
+            flowData.dpixelx = (float)accpx;
+            flowData.dpixely = (float)accpy;
 #endif
-      // Push measurements into the estimator
-      if (!useFlowDisabled) {
-        estimatorEnqueueFlow(&flowData);
-      }
-    } else {
-      outlierCount++;
+
+            // Push measurements into the estimator
+            if (!useFlowDisabled) {
+                estimatorEnqueueFlow(&flowData);
+            }
+        } else {
+            outlierCount++;
+        }
     }
-  }
 }
-
-// static void flowdeck1Init()
-// {
-//   if (isInit1 || isInit2) {
-//     return;
-//   }
-
-//   // Initialize the VL53L0 sensor using the zRanger deck driver
-//   const DeckDriver *zRanger = deckFindDriverByName("bcZRanger");
-//   zRanger->init(NULL);
-
-//   if (pmw3901Init(NCS_PIN))
-//   {
-//     xTaskCreate(flowdeckTask, FLOW_TASK_NAME, FLOW_TASK_STACKSIZE, NULL,
-//                 FLOW_TASK_PRI, NULL);
-
-//     isInit1 = true;
-//   }
-// }
-
-// static bool flowdeck1Test()
-// {
-//   if (!isInit1) {
-//     DEBUG_PRINTD("Error while initializing the PMW3901 sensor\n");
-//   }
-
-//   // Test the VL53L0 driver
-//   const DeckDriver *zRanger = deckFindDriverByName("bcZRanger");
-
-//   return zRanger->test();
-// }
-
-// static const DeckDriver flowdeck1_deck = {
-//   .vid = 0xBC,
-//   .pid = 0x0A,
-//   .name = "bcFlow",
-
-//   .usedGpio = 0,  // FIXME: set the used pins
-//   .requiredEstimator = kalmanEstimator,
-
-//   .init = flowdeck1Init,
-//   .test = flowdeck1Test,
-// };
-
-// DECK_DRIVER(flowdeck1_deck);
 
 void flowdeck2Init()
 {
-  if (isInit1 || isInit2) {
-    return;
-  }
+    if (isInit1 || isInit2) {
+        return;
+    }
 
-  // Initialize the VL53L1 sensor using the zRanger deck driver
-  // const DeckDriver *zRanger = deckFindDriverByName("bcZRanger2");
-  // zRanger->init(NULL);
+    // Initialize the VL53L1 sensor using the zRanger deck driver
+    // const DeckDriver *zRanger = deckFindDriverByName("bcZRanger2");
+    // zRanger->init(NULL);
 
-  if (pmw3901Init(NCS_PIN))
-  {
-    xTaskCreate(flowdeckTask,FLOW_TASK_NAME, FLOW_TASK_STACKSIZE, NULL,FLOW_TASK_PRI, NULL);
+    if (pmw3901Init(NCS_PIN)) {
+        xTaskCreate(flowdeckTask, FLOW_TASK_NAME, FLOW_TASK_STACKSIZE, NULL, FLOW_TASK_PRI, NULL);
 
-    isInit2 = true;
-  }
+        isInit2 = true;
+    }
 }
 
 bool flowdeck2Test()
 {
-  if (!isInit2) {
-    DEBUG_PRINTD("Error while initializing the PMW3901 sensor\n");
-  }
+    if (!isInit2) {
+        DEBUG_PRINTD("Error while initializing the PMW3901 sensor\n");
+    }
 
-  // Test the VL53L1 driver
-  //const DeckDriver *zRanger = deckFindDriverByName("bcZRanger2");
+    // Test the VL53L1 driver
+    //const DeckDriver *zRanger = deckFindDriverByName("bcZRanger2");
 
-  return isInit2;//zRanger->test();
+    return isInit2;//zRanger->test();
 }
-
-// static const DeckDriver flowdeck2_deck = {
-//   .vid = 0xBC,
-//   .pid = 0x0F,
-//   .name = "bcFlow2",
-
-//   .usedGpio = 0,  // FIXME: set the used pins
-//   .requiredEstimator = kalmanEstimator,
-
-//   .init = flowdeck2Init,
-//   .test = flowdeck2Test,
-// };
-
-//DECK_DRIVER(flowdeck2_deck);
 
 LOG_GROUP_START(motion)
 LOG_ADD(LOG_UINT8, motion, &currentMotion.motion)

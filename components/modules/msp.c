@@ -1,8 +1,8 @@
 /**
  *
  * ESPlane Firmware
- * 
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2012 BitCraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -50,14 +50,13 @@
 #define GPS_PRESENT   (0x04)
 #define SONAR_PRESENT (0x08)
 
-typedef enum
-{
-  MSP_REQUEST_STATE_WAIT_FOR_START,
-  MSP_REQUEST_STATE_PREAMBLE,
-  MSP_REQUEST_STATE_DIRECTION,
-  MSP_REQUEST_STATE_SIZE,
-  MSP_REQUEST_STATE_COMMAND,
-  MSP_REQUEST_STATE_CRC
+typedef enum {
+    MSP_REQUEST_STATE_WAIT_FOR_START,
+    MSP_REQUEST_STATE_PREAMBLE,
+    MSP_REQUEST_STATE_DIRECTION,
+    MSP_REQUEST_STATE_SIZE,
+    MSP_REQUEST_STATE_COMMAND,
+    MSP_REQUEST_STATE_CRC
 } MSP_REQUEST_STATE;
 
 /**
@@ -66,314 +65,300 @@ typedef enum
  * is using a little-endian processor, so no byte swapping
  * required
  */
-typedef struct _MspStatus
-{
-  uint16_t cycleTime; // Rate of main stabilizer loop
-  uint16_t i2cErrors; // Number of I2C bus errors encountered
-  uint16_t sensors;   // Bitmask of supported sensors (see sensor flag bitmasks)
-  uint32_t flags;     // Bitmask of flags/boxes
-  uint8_t currentSet; // ID of current active settings/config
-}__attribute__((packed)) MspStatus;
+typedef struct _MspStatus {
+    uint16_t cycleTime; // Rate of main stabilizer loop
+    uint16_t i2cErrors; // Number of I2C bus errors encountered
+    uint16_t sensors;   // Bitmask of supported sensors (see sensor flag bitmasks)
+    uint32_t flags;     // Bitmask of flags/boxes
+    uint8_t currentSet; // ID of current active settings/config
+} __attribute__((packed)) MspStatus;
 
-typedef struct _MspAttitude
-{
-  int16_t angX;       // Range [-1800,1800], Units: 1/10th degrees
-  int16_t angY;       // Range [-1800,1800], Units: 1/10th degrees
-  int16_t heading;    // Range [-180, 180], Units: degrees
-}__attribute__((packed)) MspAttitude;
+typedef struct _MspAttitude {
+    int16_t angX;       // Range [-1800,1800], Units: 1/10th degrees
+    int16_t angY;       // Range [-1800,1800], Units: 1/10th degrees
+    int16_t heading;    // Range [-180, 180], Units: degrees
+} __attribute__((packed)) MspAttitude;
 
-typedef struct _MspRc
-{
-  uint16_t roll;      // Range [1000,2000]
-  uint16_t pitch;     // Range [1000,2000]
-  uint16_t yaw;       // Range [1000,2000]
-  uint16_t throttle;  // Range [1000,2000] 
-}__attribute__((packed)) MspRc;
+typedef struct _MspRc {
+    uint16_t roll;      // Range [1000,2000]
+    uint16_t pitch;     // Range [1000,2000]
+    uint16_t yaw;       // Range [1000,2000]
+    uint16_t throttle;  // Range [1000,2000]
+} __attribute__((packed)) MspRc;
 
 // Helpers
-static uint8_t mspComputeCrc(uint8_t* pBuffer, uint32_t bufferLen);
-static bool mspIsRequestValid(MspObject* pMspObject);
-static void mspProcessRequest(MspObject* pMspObject);
+static uint8_t mspComputeCrc(uint8_t *pBuffer, uint32_t bufferLen);
+static bool mspIsRequestValid(MspObject *pMspObject);
+static void mspProcessRequest(MspObject *pMspObject);
 
 // Request handlers
-static void mspHandleRequestMspStatus(MspObject* pMspObject);
-static void mspHandleRequestMspRc(MspObject* pMspObject);
-static void mspHandleRequestMspAttitude(MspObject* pMspObject);
-static void mspHandleRequestMspBoxIds(MspObject* pMspObject);
+static void mspHandleRequestMspStatus(MspObject *pMspObject);
+static void mspHandleRequestMspRc(MspObject *pMspObject);
+static void mspHandleRequestMspAttitude(MspObject *pMspObject);
+static void mspHandleRequestMspBoxIds(MspObject *pMspObject);
 
-void mspInit(MspObject* pMspObject, const MspResponseCallback callback)
+void mspInit(MspObject *pMspObject, const MspResponseCallback callback)
 {
-  pMspObject->requestState = MSP_REQUEST_STATE_WAIT_FOR_START;
-  pMspObject->responseCallback = callback;
-}
-
-void mspProcessByte(MspObject* pMspObject, const uint8_t data)
-{
-  // If the start token is received at any time,
-  // immediately transition back to the first state
-  if(data == MSP_PREAMBLE_0)
-  {
-    pMspObject->requestState = MSP_REQUEST_STATE_PREAMBLE;
-    pMspObject->requestHeader.preamble[0] = data;
-    return;
-  }
-
-  switch(pMspObject->requestState)
-  {
-  case MSP_REQUEST_STATE_WAIT_FOR_START:
-    // Do nothing until the start token comes
-    break;
-
-  case MSP_REQUEST_STATE_PREAMBLE:
-    pMspObject->requestHeader.preamble[1] = data;
-    pMspObject->requestState = MSP_REQUEST_STATE_DIRECTION;
-    break;
-
-  case MSP_REQUEST_STATE_DIRECTION:
-    pMspObject->requestHeader.direction = data;
-    pMspObject->requestState = MSP_REQUEST_STATE_SIZE;
-    break;
-
-  case MSP_REQUEST_STATE_SIZE:
-    pMspObject->requestHeader.size = data;
-    pMspObject->requestState = MSP_REQUEST_STATE_COMMAND;
-    break;
-
-  case MSP_REQUEST_STATE_COMMAND:
-    pMspObject->requestHeader.command = data;
-    pMspObject->requestState = MSP_REQUEST_STATE_CRC;
-    break;
-
-  case MSP_REQUEST_STATE_CRC:
-    pMspObject->requestCrc = data;
-
-    // Have a completed request
-    mspProcessRequest(pMspObject);
-
     pMspObject->requestState = MSP_REQUEST_STATE_WAIT_FOR_START;
-    break;
-  }
+    pMspObject->responseCallback = callback;
 }
 
-uint8_t mspComputeCrc(uint8_t* pBuffer, uint32_t bufferLen)
+void mspProcessByte(MspObject *pMspObject, const uint8_t data)
 {
-  uint8_t crc = 0;
-
-  // Make sure the buffer is at least the size of a header
-  if(bufferLen >= sizeof(MspHeader))
-  {
-    MspHeader* pHeader = (MspHeader*)pBuffer;
-
-    // Make sure the buffer is at least the size of the buffer and data
-    if(bufferLen >= sizeof(MspHeader) + pHeader->size)
-    {
-      // The MSP CRC is defined as the XOR of size, command, and all
-      // data bytes into a zeroed sum.
-
-      crc ^= pHeader->size;
-      crc ^= pHeader->command;
-
-      for(uint16_t i = 0; i < pHeader->size; i++)
-      {
-        crc ^= pBuffer[sizeof(MspHeader) + i];
-      }
+    // If the start token is received at any time,
+    // immediately transition back to the first state
+    if (data == MSP_PREAMBLE_0) {
+        pMspObject->requestState = MSP_REQUEST_STATE_PREAMBLE;
+        pMspObject->requestHeader.preamble[0] = data;
+        return;
     }
-  }
 
-  return crc;
-}
+    switch (pMspObject->requestState) {
+        case MSP_REQUEST_STATE_WAIT_FOR_START:
+            // Do nothing until the start token comes
+            break;
 
-bool mspIsRequestValid(MspObject* pMspObject)
-{
-  if(pMspObject->requestHeader.preamble[0] != MSP_PREAMBLE_0 ||
-      pMspObject->requestHeader.preamble[1] != MSP_PREAMBLE_1)
-  {
-    // Invalid preamble
-    DEBUG_PRINTD("MSP Request has invalid preamble %d %d\n", pMspObject->requestHeader.preamble[0], pMspObject->requestHeader.preamble[1]);
-    return false;
-  }
+        case MSP_REQUEST_STATE_PREAMBLE:
+            pMspObject->requestHeader.preamble[1] = data;
+            pMspObject->requestState = MSP_REQUEST_STATE_DIRECTION;
+            break;
 
-  if(pMspObject->requestHeader.direction != MSP_DIRECTION_IN)
-  {
-    // Requests should be inputs
-    DEBUG_PRINTD("MSP Request has invalid direction %d\n", pMspObject->requestHeader.direction);
-    return false;
-  }
+        case MSP_REQUEST_STATE_DIRECTION:
+            pMspObject->requestHeader.direction = data;
+            pMspObject->requestState = MSP_REQUEST_STATE_SIZE;
+            break;
 
-  if(pMspObject->requestHeader.size != 0)
-  {
-    // Requests should not have a payload
-    DEBUG_PRINTD("MSP Request has invalid size %d\n", pMspObject->requestHeader.size);
-    return false;
-  }
+        case MSP_REQUEST_STATE_SIZE:
+            pMspObject->requestHeader.size = data;
+            pMspObject->requestState = MSP_REQUEST_STATE_COMMAND;
+            break;
 
-  if(pMspObject->requestCrc !=
-      mspComputeCrc((uint8_t*)&pMspObject->requestHeader, sizeof(pMspObject->requestHeader)))
-  {
-    // CRC does not match
-    DEBUG_PRINTD("MSP Request has invalid crc (%d != %d)\n", pMspObject->requestCrc, mspComputeCrc((uint8_t*)&pMspObject->requestHeader, sizeof(pMspObject->requestHeader)));
-    return false;
-  }
+        case MSP_REQUEST_STATE_COMMAND:
+            pMspObject->requestHeader.command = data;
+            pMspObject->requestState = MSP_REQUEST_STATE_CRC;
+            break;
 
-  return true;
-}
+        case MSP_REQUEST_STATE_CRC:
+            pMspObject->requestCrc = data;
 
-void mspProcessRequest(MspObject* pMspObject)
-{
-  if(!mspIsRequestValid(pMspObject))
-  {
-    DEBUG_PRINTD("Received invalid or improperly formatted MSP request\n");
-    return;
-  }
+            // Have a completed request
+            mspProcessRequest(pMspObject);
 
-  switch(pMspObject->requestHeader.command)
-  {
-  case MSP_STATUS:
-    mspHandleRequestMspStatus(pMspObject);
-
-    if(pMspObject->responseCallback)
-    {
-      pMspObject->responseCallback(pMspObject->mspResponse, pMspObject->mspResponseSize);
+            pMspObject->requestState = MSP_REQUEST_STATE_WAIT_FOR_START;
+            break;
     }
-    break;
+}
 
-  case MSP_RC:
-    mspHandleRequestMspRc(pMspObject);
+uint8_t mspComputeCrc(uint8_t *pBuffer, uint32_t bufferLen)
+{
+    uint8_t crc = 0;
 
-    if(pMspObject->responseCallback)
-    {
-      pMspObject->responseCallback(pMspObject->mspResponse, pMspObject->mspResponseSize);
+    // Make sure the buffer is at least the size of a header
+    if (bufferLen >= sizeof(MspHeader)) {
+        MspHeader *pHeader = (MspHeader *)pBuffer;
+
+        // Make sure the buffer is at least the size of the buffer and data
+        if (bufferLen >= sizeof(MspHeader) + pHeader->size) {
+            // The MSP CRC is defined as the XOR of size, command, and all
+            // data bytes into a zeroed sum.
+
+            crc ^= pHeader->size;
+            crc ^= pHeader->command;
+
+            for (uint16_t i = 0; i < pHeader->size; i++) {
+                crc ^= pBuffer[sizeof(MspHeader) + i];
+            }
+        }
     }
-    break;
 
-  case MSP_ATTITUDE:
-    mspHandleRequestMspAttitude(pMspObject);
+    return crc;
+}
 
-    if(pMspObject->responseCallback)
-    {
-      pMspObject->responseCallback(pMspObject->mspResponse, pMspObject->mspResponseSize);
+bool mspIsRequestValid(MspObject *pMspObject)
+{
+    if (pMspObject->requestHeader.preamble[0] != MSP_PREAMBLE_0 ||
+            pMspObject->requestHeader.preamble[1] != MSP_PREAMBLE_1) {
+        // Invalid preamble
+        DEBUG_PRINTD("MSP Request has invalid preamble %d %d\n", pMspObject->requestHeader.preamble[0], pMspObject->requestHeader.preamble[1]);
+        return false;
     }
-    break;
 
-  case MSP_BOXIDS:
-    mspHandleRequestMspBoxIds(pMspObject);
-    
-    if(pMspObject->responseCallback)
-    {
-      pMspObject->responseCallback(pMspObject->mspResponse, pMspObject->mspResponseSize);
+    if (pMspObject->requestHeader.direction != MSP_DIRECTION_IN) {
+        // Requests should be inputs
+        DEBUG_PRINTD("MSP Request has invalid direction %d\n", pMspObject->requestHeader.direction);
+        return false;
     }
-    break;
 
-  default:
-    DEBUG_PRINTD("Received unsupported MSP request: %d\n", pMspObject->requestHeader.command);
-    break;
-  }
+    if (pMspObject->requestHeader.size != 0) {
+        // Requests should not have a payload
+        DEBUG_PRINTD("MSP Request has invalid size %d\n", pMspObject->requestHeader.size);
+        return false;
+    }
+
+    if (pMspObject->requestCrc !=
+            mspComputeCrc((uint8_t *)&pMspObject->requestHeader, sizeof(pMspObject->requestHeader))) {
+        // CRC does not match
+        DEBUG_PRINTD("MSP Request has invalid crc (%d != %d)\n", pMspObject->requestCrc, mspComputeCrc((uint8_t *)&pMspObject->requestHeader, sizeof(pMspObject->requestHeader)));
+        return false;
+    }
+
+    return true;
 }
 
-void mspHandleRequestMspStatus(MspObject* pMspObject)
+void mspProcessRequest(MspObject *pMspObject)
 {
-  MspHeader* pHeader = (MspHeader*)pMspObject->mspResponse;
-  MspStatus* pData = (MspStatus*)(pMspObject->mspResponse + sizeof(MspHeader));
-  uint8_t* pCrc = (uint8_t*)(pMspObject->mspResponse + sizeof(MspHeader) + sizeof(*pData));
+    if (!mspIsRequestValid(pMspObject)) {
+        DEBUG_PRINTD("Received invalid or improperly formatted MSP request\n");
+        return;
+    }
 
-  // Header
-  pHeader->preamble[0] = MSP_PREAMBLE_0;
-  pHeader->preamble[1] = MSP_PREAMBLE_1;
-  pHeader->direction = MSP_DIRECTION_OUT;
-  pHeader->size = sizeof(*pData);
-  pHeader->command = MSP_STATUS;
+    switch (pMspObject->requestHeader.command) {
+        case MSP_STATUS:
+            mspHandleRequestMspStatus(pMspObject);
 
-  // Data
-  pData->cycleTime = 1000; // TODO: API to query this?
-  pData->i2cErrors = 0; // unused
-  pData->sensors = 0x0001; // no sensors supported yet, but need to report at least one to get the level bars to show
-  pData->flags = 0x00000001; // always report armed (bit zero)
-  pData->currentSet = 0x00;
+            if (pMspObject->responseCallback) {
+                pMspObject->responseCallback(pMspObject->mspResponse, pMspObject->mspResponseSize);
+            }
 
-  // CRC
-  *pCrc = mspComputeCrc(pMspObject->mspResponse, sizeof(pMspObject->mspResponse));
+            break;
 
-  // Update total response size
-  pMspObject->mspResponseSize = sizeof(MspHeader) + sizeof(*pData) + 1;
+        case MSP_RC:
+            mspHandleRequestMspRc(pMspObject);
+
+            if (pMspObject->responseCallback) {
+                pMspObject->responseCallback(pMspObject->mspResponse, pMspObject->mspResponseSize);
+            }
+
+            break;
+
+        case MSP_ATTITUDE:
+            mspHandleRequestMspAttitude(pMspObject);
+
+            if (pMspObject->responseCallback) {
+                pMspObject->responseCallback(pMspObject->mspResponse, pMspObject->mspResponseSize);
+            }
+
+            break;
+
+        case MSP_BOXIDS:
+            mspHandleRequestMspBoxIds(pMspObject);
+
+            if (pMspObject->responseCallback) {
+                pMspObject->responseCallback(pMspObject->mspResponse, pMspObject->mspResponseSize);
+            }
+
+            break;
+
+        default:
+            DEBUG_PRINTD("Received unsupported MSP request: %d\n", pMspObject->requestHeader.command);
+            break;
+    }
 }
 
-void mspHandleRequestMspRc(MspObject* pMspObject)
+void mspHandleRequestMspStatus(MspObject *pMspObject)
 {
-  MspHeader* pHeader = (MspHeader*)pMspObject->mspResponse;
-  MspRc* pData = (MspRc*)(pMspObject->mspResponse + sizeof(MspHeader));
-  uint8_t* pCrc = (uint8_t*)(pMspObject->mspResponse + sizeof(MspHeader) + sizeof(*pData));
+    MspHeader *pHeader = (MspHeader *)pMspObject->mspResponse;
+    MspStatus *pData = (MspStatus *)(pMspObject->mspResponse + sizeof(MspHeader));
+    uint8_t *pCrc = (uint8_t *)(pMspObject->mspResponse + sizeof(MspHeader) + sizeof(*pData));
 
-  // Header
-  pHeader->preamble[0] = MSP_PREAMBLE_0;
-  pHeader->preamble[1] = MSP_PREAMBLE_1;
-  pHeader->direction = MSP_DIRECTION_OUT;
-  pHeader->size = sizeof(*pData);
-  pHeader->command = MSP_RC;
+    // Header
+    pHeader->preamble[0] = MSP_PREAMBLE_0;
+    pHeader->preamble[1] = MSP_PREAMBLE_1;
+    pHeader->direction = MSP_DIRECTION_OUT;
+    pHeader->size = sizeof(*pData);
+    pHeader->command = MSP_STATUS;
 
-  // TODO: get actual data - for now hardcode the midpoint
-  pData->roll = 1500;
-  pData->pitch = 1500;
-  pData->yaw = 1500;
-  pData->throttle = 1500;
+    // Data
+    pData->cycleTime = 1000; // TODO: API to query this?
+    pData->i2cErrors = 0; // unused
+    pData->sensors = 0x0001; // no sensors supported yet, but need to report at least one to get the level bars to show
+    pData->flags = 0x00000001; // always report armed (bit zero)
+    pData->currentSet = 0x00;
 
-  // CRC
-  *pCrc = mspComputeCrc(pMspObject->mspResponse, sizeof(pMspObject->mspResponse));
+    // CRC
+    *pCrc = mspComputeCrc(pMspObject->mspResponse, sizeof(pMspObject->mspResponse));
 
-  // Update total response size
-  pMspObject->mspResponseSize = sizeof(MspHeader) + sizeof(*pData) + 1;
+    // Update total response size
+    pMspObject->mspResponseSize = sizeof(MspHeader) + sizeof(*pData) + 1;
 }
 
-static void mspHandleRequestMspAttitude(MspObject* pMspObject)
+void mspHandleRequestMspRc(MspObject *pMspObject)
 {
-  MspHeader* pHeader = (MspHeader*)pMspObject->mspResponse;
-  MspAttitude* pData = (MspAttitude*)(pMspObject->mspResponse + sizeof(MspHeader));
-  uint8_t* pCrc = (uint8_t*)(pMspObject->mspResponse + sizeof(MspHeader) + sizeof(*pData));
+    MspHeader *pHeader = (MspHeader *)pMspObject->mspResponse;
+    MspRc *pData = (MspRc *)(pMspObject->mspResponse + sizeof(MspHeader));
+    uint8_t *pCrc = (uint8_t *)(pMspObject->mspResponse + sizeof(MspHeader) + sizeof(*pData));
 
-  // Header
-  pHeader->preamble[0] = MSP_PREAMBLE_0;
-  pHeader->preamble[1] = MSP_PREAMBLE_1;
-  pHeader->direction = MSP_DIRECTION_OUT;
-  pHeader->size = sizeof(*pData);
-  pHeader->command = MSP_ATTITUDE;
+    // Header
+    pHeader->preamble[0] = MSP_PREAMBLE_0;
+    pHeader->preamble[1] = MSP_PREAMBLE_1;
+    pHeader->direction = MSP_DIRECTION_OUT;
+    pHeader->size = sizeof(*pData);
+    pHeader->command = MSP_RC;
 
-  // Data
-  float roll;
-  float pitch;
-  float yaw;
-  sensfusion6GetEulerRPY(&roll, &pitch, &yaw); // TODO: handle kalman estimator
+    // TODO: get actual data - for now hardcode the midpoint
+    pData->roll = 1500;
+    pData->pitch = 1500;
+    pData->yaw = 1500;
+    pData->throttle = 1500;
 
-  pData->angX = (int16_t)(roll * 10);
-  pData->angY = (int16_t)(pitch * 10);
-  pData->heading = 0; // TODO: mag support
+    // CRC
+    *pCrc = mspComputeCrc(pMspObject->mspResponse, sizeof(pMspObject->mspResponse));
 
-  // CRC
-  *pCrc = mspComputeCrc(pMspObject->mspResponse, sizeof(pMspObject->mspResponse));
-
-  // Update total response size
-  pMspObject->mspResponseSize = sizeof(MspHeader) + sizeof(*pData) + 1;
+    // Update total response size
+    pMspObject->mspResponseSize = sizeof(MspHeader) + sizeof(*pData) + 1;
 }
 
-static void mspHandleRequestMspBoxIds(MspObject* pMspObject)
+static void mspHandleRequestMspAttitude(MspObject *pMspObject)
 {
-  MspHeader* pHeader = (MspHeader*)pMspObject->mspResponse;
-  uint8_t* pData = (uint8_t*)(pMspObject->mspResponse + sizeof(MspHeader));
-  uint8_t* pCrc = (uint8_t*)(pMspObject->mspResponse + sizeof(MspHeader) + sizeof(*pData));
+    MspHeader *pHeader = (MspHeader *)pMspObject->mspResponse;
+    MspAttitude *pData = (MspAttitude *)(pMspObject->mspResponse + sizeof(MspHeader));
+    uint8_t *pCrc = (uint8_t *)(pMspObject->mspResponse + sizeof(MspHeader) + sizeof(*pData));
 
-  // Header
-  pHeader->preamble[0] = MSP_PREAMBLE_0;
-  pHeader->preamble[1] = MSP_PREAMBLE_1;
-  pHeader->direction = MSP_DIRECTION_OUT;
-  pHeader->size = sizeof(*pData);
-  pHeader->command = MSP_BOXIDS;
-  
-  // TODO: Data - this needs to be properly implemented
-  // For now, we just return byte 0 = 0 which tells 
-  // the client to use box ID 0 for the ARMED box
-  pData[0] = 0x00;
+    // Header
+    pHeader->preamble[0] = MSP_PREAMBLE_0;
+    pHeader->preamble[1] = MSP_PREAMBLE_1;
+    pHeader->direction = MSP_DIRECTION_OUT;
+    pHeader->size = sizeof(*pData);
+    pHeader->command = MSP_ATTITUDE;
 
-  // CRC
-  *pCrc = mspComputeCrc(pMspObject->mspResponse, sizeof(pMspObject->mspResponse));
+    // Data
+    float roll;
+    float pitch;
+    float yaw;
+    sensfusion6GetEulerRPY(&roll, &pitch, &yaw); // TODO: handle kalman estimator
 
-  // Update total response size
-  pMspObject->mspResponseSize = sizeof(MspHeader) + sizeof(*pData) + 1;
+    pData->angX = (int16_t)(roll * 10);
+    pData->angY = (int16_t)(pitch * 10);
+    pData->heading = 0; // TODO: mag support
+
+    // CRC
+    *pCrc = mspComputeCrc(pMspObject->mspResponse, sizeof(pMspObject->mspResponse));
+
+    // Update total response size
+    pMspObject->mspResponseSize = sizeof(MspHeader) + sizeof(*pData) + 1;
+}
+
+static void mspHandleRequestMspBoxIds(MspObject *pMspObject)
+{
+    MspHeader *pHeader = (MspHeader *)pMspObject->mspResponse;
+    uint8_t *pData = (uint8_t *)(pMspObject->mspResponse + sizeof(MspHeader));
+    uint8_t *pCrc = (uint8_t *)(pMspObject->mspResponse + sizeof(MspHeader) + sizeof(*pData));
+
+    // Header
+    pHeader->preamble[0] = MSP_PREAMBLE_0;
+    pHeader->preamble[1] = MSP_PREAMBLE_1;
+    pHeader->direction = MSP_DIRECTION_OUT;
+    pHeader->size = sizeof(*pData);
+    pHeader->command = MSP_BOXIDS;
+
+    // TODO: Data - this needs to be properly implemented
+    // For now, we just return byte 0 = 0 which tells
+    // the client to use box ID 0 for the ARMED box
+    pData[0] = 0x00;
+
+    // CRC
+    *pCrc = mspComputeCrc(pMspObject->mspResponse, sizeof(pMspObject->mspResponse));
+
+    // Update total response size
+    pMspObject->mspResponseSize = sizeof(MspHeader) + sizeof(*pData) + 1;
 }

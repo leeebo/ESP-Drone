@@ -1,6 +1,6 @@
 /**
  * ESPlane Firmware
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2012 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -22,50 +22,42 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
+
 #include "config.h"
-
-/******** Defines ********/
-
-
-// #define ADC_INTERNAL_VREF   1.20
 
 /******** Types ********/
 
-typedef struct __attribute__((packed))
-{
-  uint16_t vref;
-  uint16_t val;
-} AdcPair;
+typedef struct __attribute__((packed)){
+    uint16_t vref;
+    uint16_t val;
+}AdcPair;
 
-typedef struct __attribute__((packed))
-{
-  AdcPair vbat;
-} AdcGroup;
+typedef struct __attribute__((packed)){
+    AdcPair vbat;
+}AdcGroup;
 
-typedef struct
-{
-  uint16_t vbat;
-  uint16_t vbatVref;
+typedef struct {
+    uint16_t vbat;
+    uint16_t vbatVref;
 } AdcDeciGroup;
 
 /*** Public interface ***/
 
 /**
  * Initialize analog to digital converter. Configures gyro and vref channels.
- *
  */
 void adcInit(void);
 
 bool adcTest(void);
 
 /**
- * Converts a 12 bit ADC value to battery voltage
+ * @brief Converts a 12 bit ADC value to battery voltage
  * @param vbat  12 bit adc value
  * @param vref  12 bit adc value of the internal voltage
  *              reference, 1.2V
- *
  * @return The voltage in a float value
  */
 float adcConvertToVoltageFloat(uint16_t v, uint16_t vref);

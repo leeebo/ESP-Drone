@@ -1,8 +1,8 @@
 /*
  *
  * ESPlane Firmware
- * 
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2012 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -19,10 +19,10 @@
  *
  * system.c - Top level module implementation
  */
-#define DEBUG_MODULE "SYS"
+
 #include <stdbool.h>
 
-/* FreeRtos includes */
+/* FreeRTOS includes */
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
@@ -34,7 +34,6 @@
 #include "ledseq.h"
 #include "adc_esp32.h"
 #include "pm.h"
-
 #include "config.h"
 #include "system.h"
 #include "platform.h"
@@ -58,18 +57,16 @@
 #include "estimator_kalman.h"
 //#include "deck.h"
 #include "extrx.h"
-
 #include "app.h"
 #include "stm32_legacy.h"
+#define DEBUG_MODULE "SYS"
 #include "debug_cf.h"
 
 /* Private variable */
 static bool selftestPassed;
 static bool canFly;
 static bool isInit;
-
-/* System wide synchronisation */
-xSemaphoreHandle canStartMutex;
+static xSemaphoreHandle canStartMutex;
 
 /* Private functions */
 static void systemTask(void *arg);
@@ -77,215 +74,181 @@ static void systemTask(void *arg);
 /* Public functions */
 void systemLaunch(void)
 {
-
-  xTaskCreate(systemTask, SYSTEM_TASK_NAME,SYSTEM_TASK_STACKSIZE, NULL,SYSTEM_TASK_PRI, NULL);
-
+    xTaskCreate(systemTask, SYSTEM_TASK_NAME, SYSTEM_TASK_STACKSIZE, NULL, SYSTEM_TASK_PRI, NULL);
 }
 
 // This must be the first module to be initialized!
 void systemInit(void)
 {
-  if(isInit)
-    return;
+    if (isInit) {
+        return;
+    }
 
-  canStartMutex = xSemaphoreCreateMutex();
-  xSemaphoreTake(canStartMutex, portMAX_DELAY);
+    DEBUG_PRINT_LOCAL("----------------------------\n");
+    DEBUG_PRINT_LOCAL("%s is up and running!\n", platformConfigGetDeviceTypeName());
 
-  wifilinkInit();
-  sysLoadInit(); //系统负载-task情况
+    canStartMutex = xSemaphoreCreateMutex();
+    xSemaphoreTake(canStartMutex, portMAX_DELAY);
 
-  /* Initialized here so that DEBUG_PRINTD (buffered) can be used early */
-  debugInit();
-  crtpInit();
-  consoleInit();
+    wifilinkInit();
+    sysLoadInit();
 
-  DEBUG_PRINT_LOCAL("----------------------------\n");
-  DEBUG_PRINT_LOCAL("%s is up and running!\n", platformConfigGetDeviceTypeName());
-  DEBUG_PRINT_LOCAL("I am ESP32 and I have 4MB of flash!\n");
+    /* Initialized here so that DEBUG_PRINTD (buffered) can be used early */
+    debugInit();
+    crtpInit();
+    consoleInit();
 
-  configblockInit();//TODO:
-  workerInit();
-  adcInit();
-  ledseqInit();
-  pmInit();
-  buzzerInit();
+    configblockInit();//TODO:
+    workerInit();
+    adcInit();
+    ledseqInit();
+    pmInit();
+    buzzerInit();
+
+    DEBUG_PRINT_LOCAL("----------------------------\n");
 
 #ifdef APP_ENABLED
-  appInit();
+    appInit();
 #endif
 
-  isInit = true;
+    isInit = true;
 }
 
 bool systemTest()
 {
-  bool pass=isInit;
+    bool pass = isInit;
 
-  pass &= ledseqTest();
-  pass &= pmTest();
-  DEBUG_PRINTD("pmTest = %d",pass);
-  pass &= workerTest();
-  DEBUG_PRINTD("workerTest = %d",pass);
-  //pass &= buzzerTest();
-  return pass;
+    pass &= ledseqTest();
+    pass &= pmTest();
+    DEBUG_PRINTD("pmTest = %d", pass);
+    pass &= workerTest();
+    DEBUG_PRINTD("workerTest = %d", pass);
+    //pass &= buzzerTest();
+    return pass;
 }
 
 /* Private functions implementation */
 
 void systemTask(void *arg)
 {
-  bool pass = true;
+    bool pass = true;
 
-  ledInit();
-  //ledSet(CHG_LED, 1);
-  wifiInit();
-  vTaskDelay(M2T(500));
+    ledInit();
+    wifiInit();
+    vTaskDelay(M2T(500));
 
 #ifdef DEBUG_QUEUE_MONITOR
-  queueMonitorInit();
+    queueMonitorInit();
 #endif
 
 #ifdef ENABLE_UART1
-  uart1Init(9600);
+    uart1Init(9600);
 #endif
 #ifdef ENABLE_UART2
-  uart2Init(115200);
+    uart2Init(115200);
 #endif
 
-  //Init the high-levels modules
-  systemInit();
-  commInit();
-  commanderInit();
+    /*Init the high-levels modules*/
+    systemInit();
+    commInit();
+    commanderInit();
 
-  StateEstimatorType estimator = kalmanEstimator;
-  estimatorKalmanTaskInit();
-  stabilizerInit(estimator);
-  soundInit();
+    StateEstimatorType estimator = kalmanEstimator;
+    estimatorKalmanTaskInit();
+    stabilizerInit(estimator);
+    soundInit();
 
 #ifdef PROXIMITY_ENABLED
-  proximityInit();
+    proximityInit();
 #endif
 
-  //Test the modules
-  pass &= wifiTest();
-  DEBUG_PRINTI("wifilinkTest = %d ",pass);
-  pass &= systemTest();
-  DEBUG_PRINTI("systemTest = %d ",pass);
-  pass &= configblockTest();
-  DEBUG_PRINTI("configblockTest = %d ",pass);
-  pass &= commTest();
-  DEBUG_PRINTI("commTest = %d ",pass);
-  pass &= commanderTest();
-  DEBUG_PRINTI("commanderTest = %d ",pass);
-  pass &= stabilizerTest();
-  DEBUG_PRINTI("stabilizerTest = %d ",pass);
-  pass &= estimatorKalmanTaskTest();
-  DEBUG_PRINTI("estimatorKalmanTaskTest = %d ",pass);
-  // pass &= watchdogNormalStartTest();
-  //DEBUG_PRINTI("watchdogNormalStartTest = %d ",pass);
+    /* Test each modules */
+    pass &= wifiTest();
+    DEBUG_PRINTI("wifilinkTest = %d ", pass);
+    pass &= systemTest();
+    DEBUG_PRINTI("systemTest = %d ", pass);
+    pass &= configblockTest();
+    DEBUG_PRINTI("configblockTest = %d ", pass);
+    pass &= commTest();
+    DEBUG_PRINTI("commTest = %d ", pass);
+    pass &= commanderTest();
+    DEBUG_PRINTI("commanderTest = %d ", pass);
+    pass &= stabilizerTest();
+    DEBUG_PRINTI("stabilizerTest = %d ", pass);
+    pass &= estimatorKalmanTaskTest();
+    DEBUG_PRINTI("estimatorKalmanTaskTest = %d ", pass);
+    // pass &= watchdogNormalStartTest();
+    //DEBUG_PRINTI("watchdogNormalStartTest = %d ",pass);
 
-  //Start the firmware
-  if(pass)
-  {
-    selftestPassed = 1;
-    systemStart();
-    DEBUG_PRINTD("systemStart ! selftestPassed = %d",selftestPassed);
-    soundSetEffect(SND_STARTUP);
-    ledseqRun(SYS_LED, seq_alive);
-    ledseqRun(LINK_LED, seq_testPassed);
-  }
-  else
-  {
-    selftestPassed = 0;
-    if (systemTest())
-    {
-      while(1)
-      {
-        ledseqRun(SYS_LED, seq_testPassed); //Red passed == not passed!
-        vTaskDelay(M2T(2000));
-        // System can be forced to start by setting the param to 1 from the cfclient
-        if (selftestPassed)
-        {
-	      DEBUG_PRINTD("Start forced.\n");
-          systemStart();
-          break;
+    //Start the firmware
+    if (pass) {
+        selftestPassed = 1;
+        systemStart();
+        DEBUG_PRINTI("systemStart ! selftestPassed = %d", selftestPassed);
+        soundSetEffect(SND_STARTUP);
+        ledseqRun(SYS_LED, seq_alive);
+        ledseqRun(LINK_LED, seq_testPassed);
+    } else {
+        selftestPassed = 0;
+
+        if (systemTest()) {
+            while (1) {
+                ledseqRun(SYS_LED, seq_testPassed); //Red passed == not passed!
+                vTaskDelay(M2T(2000));
+
+                if (selftestPassed) {// System can be forced to start by setting the param to 1 from the cfclient
+                    DEBUG_PRINTD("Start forced.\n");
+                    systemStart();
+                    break;
+                }
+            }
+        } else {
+            ledInit();
+            ledSet(SYS_LED, true);
         }
-      }
     }
-    else
-    {
-      ledInit();
-      ledSet(SYS_LED, true);
+
+    DEBUG_PRINTI("Free heap: %d bytes\n", xPortGetFreeHeapSize());
+
+    workerLoop();
+
+    while (1) {
+        vTaskDelay(portMAX_DELAY);//Should never reach this point!
     }
-  }
-  DEBUG_PRINTI("Free heap: %d bytes\n", xPortGetFreeHeapSize());
-
-  workerLoop();
-
-  //Should never reach this point!
-  while(1)
-    vTaskDelay(portMAX_DELAY);
 }
 
 
 /* Global system variables */
 void systemStart()
 {
-  xSemaphoreGive(canStartMutex);
+    xSemaphoreGive(canStartMutex);
 #ifndef DEBUG_EP2
-  // watchdogInit();
+    // watchdogInit();
 #endif
 }
 
 void systemWaitStart(void)
 {
-  //This permits to guarantee that the system task is initialized before other
-  //tasks waits for the start event.
-  while(!isInit)
-    vTaskDelay(2);
+    /*This permits to guarantee that the system task is initialized before other
+    *tasks waits for the start event.
+    */
+    while (!isInit) {
+        vTaskDelay(2);
+    }
 
-  xSemaphoreTake(canStartMutex, portMAX_DELAY);
-  xSemaphoreGive(canStartMutex);
+    xSemaphoreTake(canStartMutex, portMAX_DELAY);
+    xSemaphoreGive(canStartMutex);
 }
 
 void systemSetCanFly(bool val)
 {
-  canFly = val;
+    canFly = val;
 }
 
 bool systemCanFly(void)
 {
-  return canFly;
+    return canFly;
 }
-
-// void vApplicationIdleHook( void )  //TODO:has been defined in esp_idf
-// {
-//     TODO:
-//   static uint32_t tickOfLatestWatchdogReset = M2T(0);
-
-//   portTickType tickCount = xTaskGetTickCount();
-
-//   if (tickCount - tickOfLatestWatchdogReset > M2T(WATCHDOG_RESET_PERIOD_MS))
-//   {
-//     tickOfLatestWatchdogReset = tickCount;
-//     //watchdogReset();
-//   }
-
-//   // Enter sleep mode. Does not work when debugging chip with SWD.
-//   // Currently saves about 20mA STM32F405 current consumption (~30%).
-// #ifndef DEBUG_EP2
-//   { __asm volatile ("wfi"); }
-// #endif
-// }
-
-/*System parameters (mostly for test, should be removed from here) */
-//TODO:
-//PARAM_GROUP_START(cpu)
-// PARAM_ADD(PARAM_UINT16 | PARAM_RONLY, flash, MCU_FLASH_SIZE_ADDRESS)
-// PARAM_ADD(PARAM_UINT32 | PARAM_RONLY, id0, MCU_ID_ADDRESS+0)
-// PARAM_ADD(PARAM_UINT32 | PARAM_RONLY, id1, MCU_ID_ADDRESS+4)
-// PARAM_ADD(PARAM_UINT32 | PARAM_RONLY, id2, MCU_ID_ADDRESS+8)
-//PARAM_GROUP_STOP(cpu)
 
 PARAM_GROUP_START(system)
 PARAM_ADD(PARAM_INT8, selftestPassed, &selftestPassed)

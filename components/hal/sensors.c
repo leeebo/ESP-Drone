@@ -1,8 +1,8 @@
 /**
  *
  * ESPlane Firmware
- * 
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2018 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -32,39 +32,39 @@
 #define str(s) #s
 
 #ifdef SENSOR_INCLUDED_BMI088_BMP388
-  #include "sensors_bmi088_bmp388.h"
+#include "sensors_bmi088_bmp388.h"
 #endif
 
 #ifdef SENSOR_INCLUDED_BMI088_SPI_BMP388
-  #include "sensors_bmi088_spi_bmp388.h"
+#include "sensors_bmi088_spi_bmp388.h"
 #endif
 
 #ifdef SENSOR_INCLUDED_MPU9250_LPS25H
-  #include "sensors_mpu9250_lps25h.h"
+#include "sensors_mpu9250_lps25h.h"
 #endif
 
 #ifdef SENSOR_INCLUDED_BOSCH
-  #include "sensors_bosch.h"
+#include "sensors_bosch.h"
 #endif
 
 #ifdef SENSOR_INCLUDED_MPU6050_HMC5883L_MS5611
-  #include "sensors_mpu6050_hm5883L_ms5611.h"
+#include "sensors_mpu6050_hm5883L_ms5611.h"
 #endif
 
 typedef struct {
-  SensorImplementation_t implements;
-  void (*init)(void);
-  bool (*test)(void);
-  bool (*areCalibrated)(void);
-  bool (*manufacturingTest)(void);
-  void (*acquire)(sensorData_t *sensors, const uint32_t tick);
-  void (*waitDataReady)(void);
-  bool (*readGyro)(Axis3f *gyro);
-  bool (*readAcc)(Axis3f *acc);
-  bool (*readMag)(Axis3f *mag);
-  bool (*readBaro)(baro_t *baro);
-  void (*setAccMode)(accModes accMode);
-  void (*dataAvailableCallback)(void);
+    SensorImplementation_t implements;
+    void (*init)(void);
+    bool (*test)(void);
+    bool (*areCalibrated)(void);
+    bool (*manufacturingTest)(void);
+    void (*acquire)(sensorData_t *sensors, const uint32_t tick);
+    void (*waitDataReady)(void);
+    bool (*readGyro)(Axis3f *gyro);
+    bool (*readAcc)(Axis3f *acc);
+    bool (*readMag)(Axis3f *mag);
+    bool (*readBaro)(baro_t *baro);
+    void (*setAccMode)(accModes accMode);
+    void (*dataAvailableCallback)(void);
 } sensorsImplementation_t;
 
 #pragma GCC diagnostic push
@@ -166,92 +166,89 @@ static const sensorsImplementation_t *findImplementation(SensorImplementation_t 
 
 void sensorsInit(void)
 {
-  if (isInit)
-  {
-    return;
-  }
+    if (isInit) {
+        return;
+    }
 
 #ifndef SENSORS_FORCE
-  SensorImplementation_t sensorImplementation = platformConfigGetSensorImplementation();
+    SensorImplementation_t sensorImplementation = platformConfigGetSensorImplementation();
 #else
-  SensorImplementation_t sensorImplementation = SENSORS_FORCE;
-  DEBUG_PRINTD("Forcing sensors to " xstr(SENSORS_FORCE) "\n");
+    SensorImplementation_t sensorImplementation = SENSORS_FORCE;
+    DEBUG_PRINTD("Forcing sensors to " xstr(SENSORS_FORCE) "\n");
 #endif
 
-  activeImplementation = findImplementation(sensorImplementation);
+    activeImplementation = findImplementation(sensorImplementation);
 
-  activeImplementation->init();
+    activeImplementation->init();
 
-  isInit = true;
+    isInit = true;
 }
 
 bool sensorsTest(void)
 {
-  return activeImplementation->test();
+    return activeImplementation->test();
 }
 
 bool sensorsAreCalibrated(void)
 {
-  return activeImplementation->areCalibrated();
+    return activeImplementation->areCalibrated();
 }
 
 bool sensorsManufacturingTest(void)
 {
-  return activeImplementation->manufacturingTest;
+    return activeImplementation->manufacturingTest;
 }
 
 void sensorsAcquire(sensorData_t *sensors, const uint32_t tick)
 {
-  activeImplementation->acquire(sensors, tick);
+    activeImplementation->acquire(sensors, tick);
 }
 
 void sensorsWaitDataReady(void)
 {
-  activeImplementation->waitDataReady();
+    activeImplementation->waitDataReady();
 }
 
 bool sensorsReadGyro(Axis3f *gyro)
 {
-  return activeImplementation->readGyro(gyro);
+    return activeImplementation->readGyro(gyro);
 }
 
 bool sensorsReadAcc(Axis3f *acc)
 {
-  return activeImplementation->readAcc(acc);
+    return activeImplementation->readAcc(acc);
 }
 
 bool sensorsReadMag(Axis3f *mag)
 {
-  return activeImplementation->readMag(mag);
+    return activeImplementation->readMag(mag);
 }
 
 bool sensorsReadBaro(baro_t *baro)
 {
-  return activeImplementation->readBaro(baro);
+    return activeImplementation->readBaro(baro);
 }
 
 void sensorsSetAccMode(accModes accMode)
 {
-  activeImplementation->setAccMode(accMode);
+    activeImplementation->setAccMode(accMode);
 }
 
 void __attribute__((used)) EXTI14_Callback(void)
 {
-  activeImplementation->dataAvailableCallback();
+    activeImplementation->dataAvailableCallback();
 }
 
 static const sensorsImplementation_t *findImplementation(SensorImplementation_t implementation)
 {
-  const sensorsImplementation_t *result = 0;
+    const sensorsImplementation_t *result = 0;
 
-  for (int i = 0; i < SensorImplementation_COUNT; i++)
-  {
-    if (sensorImplementations[i].implements == implementation)
-    {
-      result = &sensorImplementations[i];
-      break;
+    for (int i = 0; i < SensorImplementation_COUNT; i++) {
+        if (sensorImplementations[i].implements == implementation) {
+            result = &sensorImplementations[i];
+            break;
+        }
     }
-  }
 
-  return result;
+    return result;
 }

@@ -1,8 +1,8 @@
 /**
 *
  * ESPlane Firmware
- * 
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2015 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -21,15 +21,14 @@
  */
 #ifndef __BUZZER_H__
 #define __BUZZER_H__
- 
+
 #include <stdint.h>
 #include <stdbool.h>
 
 /** Functionpointers used to control the buzzer */
-struct buzzerControl
-{
-  void (*off)();
-  void (*on)(uint32_t freq);
+struct buzzerControl {
+    void (*off)();
+    void (*on)(uint32_t freq);
 };
 
 /**
@@ -55,7 +54,7 @@ void buzzerOn(uint32_t freq);
 /**
  * Set function pointers for controlling the buzzer hardware.
  */
-void buzzerSetControl(struct buzzerControl * bc);
+void buzzerSetControl(struct buzzerControl *bc);
 
 #endif //__BUZZER_H__
 

@@ -1,8 +1,8 @@
 /**
  *
  * ESPlane Firmware
- * 
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2015 BitCraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -22,11 +22,9 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+
 #include "stm32_legacy.h"
-
-//#include "deck.h"
 #include "param.h"
-
 #include "buzzer.h"
 #include "piezo.h"
 
@@ -34,30 +32,30 @@ static bool isInit;
 
 static void buzzDeckOn(uint32_t freq)
 {
-  piezoSetRatio(128);
-  piezoSetFreq(freq);
+    piezoSetRatio(128);
+    piezoSetFreq(freq);
 }
 
 static void buzzDeckOff()
 {
-  piezoSetRatio(0);
+    piezoSetRatio(0);
 }
 
 static struct buzzerControl buzzDeckCtrl = {
-  .on         = buzzDeckOn,
-  .off        = buzzDeckOff
+    .on         = buzzDeckOn,
+    .off        = buzzDeckOff
 };
 
 void buzzDeckInit()
 {
-  if (isInit) {
-    return;
-  }
+    if (isInit) {
+        return;
+    }
 
-  piezoInit();
-  buzzerSetControl(&buzzDeckCtrl);
+    piezoInit();
+    buzzerSetControl(&buzzDeckCtrl);
 
-  isInit = true;
+    isInit = true;
 }
 
 

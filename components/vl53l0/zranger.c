@@ -32,13 +32,10 @@
 #include "param.h"
 #include "range.h"
 #include "config.h"
-
 #include "i2cdev.h"
 #include "zranger.h"
 #include "vl53l0x.h"
-
 #include "stabilizer_types.h"
-
 #include "estimator.h"
 #include "cf_math.h"
 

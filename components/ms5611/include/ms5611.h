@@ -2,7 +2,7 @@
  *
  * ESPlane Firmware
  *
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011 Fabio Varesano <fvaresano@yahoo.it>
  * Copyright (C) 2011-2012 Bitcraze AB
  *
@@ -68,7 +68,7 @@
 
 bool ms5611Init(I2C_Dev *i2cPort);
 bool ms5611SelfTest(void);
-bool ms5611EvaluateSelfTest(float min, float max, float value, char* string);
+bool ms5611EvaluateSelfTest(float min, float max, float value, char *string);
 float ms5611GetPressure(uint8_t osr);
 float ms5611CalcPressure(int32_t rawPress, int32_t dT);
 float ms5611GetTemperature(uint8_t osr);
@@ -82,6 +82,6 @@ void ms5611Reset();
 void ms5611StartConversion(uint8_t command);
 int32_t ms5611GetConversion(uint8_t command);
 
-void ms5611GetData(float* pressure, float* temperature, float* asl);
-float ms5611PressureToAltitude(float* pressure);
+void ms5611GetData(float *pressure, float *temperature, float *asl);
+float ms5611PressureToAltitude(float *pressure);
 #endif // MS5611_H

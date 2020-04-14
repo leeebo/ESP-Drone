@@ -2,7 +2,7 @@
  *
  * ESPlane Firmware
  *
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2012 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -61,7 +61,7 @@ bool eepromTestConnection(void);
  *
  * @return True on success, else false.
  */
-bool eepromReadBuffer(uint8_t* buffer, size_t readAddr, size_t len);
+bool eepromReadBuffer(uint8_t *buffer, size_t readAddr, size_t len);
 
 /**
  * Write data to the eeprom from a supplied buffer.
@@ -72,9 +72,9 @@ bool eepromReadBuffer(uint8_t* buffer, size_t readAddr, size_t len);
  *
  * @return True on success, else false.
  */
-bool eepromWriteBuffer(uint8_t* buffer, size_t writeAddr, size_t len);
+bool eepromWriteBuffer(uint8_t *buffer, size_t writeAddr, size_t len);
 
 // TODO
-bool eepromWritePage(uint8_t* buffer, uint16_t writeAddr);
+bool eepromWritePage(uint8_t *buffer, uint16_t writeAddr);
 
 #endif // EERROM_H

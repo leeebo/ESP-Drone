@@ -1,8 +1,8 @@
 /*
 *
  * ESPlane Firmware
- * 
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2012 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -43,14 +43,15 @@ static bool isInit;
 
 void commInit(void)
 {
-  if (isInit)
-    return;
+    if (isInit) {
+        return;
+    }
 
-  /* These functions  are moved to be initialized early so
-   * that DEBUG_PRINTD can be used early */
-  //wifilinkInit();
-   //crtpInit();
-   //consoleInit();
+    /* These functions  are moved to be initialized early so
+     * that DEBUG_PRINTD can be used early */
+    //wifilinkInit();
+    //crtpInit();
+    //consoleInit();
 
     crtpSetLink(wifilinkGetLink());
     crtpserviceInit();
@@ -63,20 +64,20 @@ void commInit(void)
 
 bool commTest(void)
 {
-  bool pass=isInit;
-  pass &= wifilinkTest();
-  DEBUG_PRINTI("wifilinkTest = %d ",pass);
-  pass &= crtpTest();
-  DEBUG_PRINTI("crtpTest = %d ",pass);
-  pass &= crtpserviceTest();
-  DEBUG_PRINTI("crtpserviceTest = %d ",pass);
-  pass &= platformserviceTest();
-  DEBUG_PRINTI("platformserviceTest = %d ",pass);
-  pass &= consoleTest();
-  DEBUG_PRINTI("consoleTest = %d ",pass);
-  pass &= paramTest();
-  DEBUG_PRINTI("paramTest = %d ",pass);
-  
-  return pass;
+    bool pass = isInit;
+    pass &= wifilinkTest();
+    DEBUG_PRINTI("wifilinkTest = %d ", pass);
+    pass &= crtpTest();
+    DEBUG_PRINTI("crtpTest = %d ", pass);
+    pass &= crtpserviceTest();
+    DEBUG_PRINTI("crtpserviceTest = %d ", pass);
+    pass &= platformserviceTest();
+    DEBUG_PRINTI("platformserviceTest = %d ", pass);
+    pass &= consoleTest();
+    DEBUG_PRINTI("consoleTest = %d ", pass);
+    pass &= paramTest();
+    DEBUG_PRINTI("paramTest = %d ", pass);
+
+    return pass;
 }
 

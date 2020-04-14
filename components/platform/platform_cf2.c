@@ -1,8 +1,8 @@
 /**
 *
  * ESPlane Firmware
- * 
- * Copyright 2019-2020  Espressif Systems (Shanghai) 
+ *
+ * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2018 Bitcraze AB
  *
  * This program is free software: you can redistribute it and/or modify
@@ -17,38 +17,46 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
- * Platform functionality for the EP21 platform
+ * Platform functionality for the different hardware
  */
 
-#define DEBUG_MODULE "PLATFORM"
+
 
 #include <string.h>
+
 #include "platform.h"
+#define DEBUG_MODULE "PLATFORM"
 #include "debug_cf.h"
 
+/*to support different hardware platform */
+static platformConfig_t configs[] = {
 
-static platformConfig_t configs[] =  //多平台支持设计
-{
+    {
+        .deviceType = "EP20",
+        .deviceTypeName = "ESPlane 2.0 With ESP32",
+        .sensorImplementation = SensorImplementation_mpu6050_HMC5883L_MS5611,
+        .physicalLayoutAntennasAreClose = false,
+        .motorMap = motorMapDefaultBrushed,
+    },
+    {
+        .deviceType = "EP30",
+        .deviceTypeName = "ESPlane 3.0 With ESP32-s2",
+        .sensorImplementation = SensorImplementation_mpu6050_HMC5883L_MS5611,
+        .physicalLayoutAntennasAreClose = false,
+        .motorMap = motorMapDefaultBrushed,
+    },
 
-  {
-      .deviceType = "EP21",
-      .deviceTypeName = "ESPLANE 2.1",
-      .sensorImplementation = SensorImplementation_mpu6050_HMC5883L_MS5611,
-      .physicalLayoutAntennasAreClose = false,
-      .motorMap = motorMapDefaultBrushed,
- },
-    
 };
 
 const platformConfig_t *platformGetListOfConfigurations(int *nrOfConfigs)
 {
-  *nrOfConfigs = sizeof(configs) / sizeof(platformConfig_t);
-  return configs;
+    *nrOfConfigs = sizeof(configs) / sizeof(platformConfig_t);
+    return configs;
 }
 
 bool platformInitHardware()
 {
-  //TODO:
+    //TODO:
     return true;
 }
 
@@ -56,5 +64,5 @@ bool platformInitHardware()
 
 const char *platformConfigGetPlatformName()
 {
-  return "EP21";
+    return "EP20";
 }
