@@ -26,10 +26,10 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "driver/ledc.h"
 
 #include "stm32_legacy.h"
 #include "piezo.h"
-#include "motors.h"
 
 // HW defines
 #define PIEZO_TIM_PERIF       RCC_APB1Periph_TIM5
@@ -41,8 +41,8 @@
 #define BUZ_PWM_CH1  0
 #define BUZ_PWM_CH2  1
 
-#define PIEZO_GPIO_POS_PIN           27
-#define PIEZO_GPIO_NEG_PIN           26
+#define PIEZO_GPIO_POS_PIN    CONFIG_BUZ1_PIN_POS
+#define PIEZO_GPIO_NEG_PIN    CONFIG_BUZ2_PIN_NEG
 
 
 #define PIEZO_PWM_BITS      (8)
@@ -59,7 +59,7 @@ ledc_channel_config_t buzz_channel[2] = {
         .channel = BUZ_PWM_CH1,
         .duty = 0,
         .gpio_num = PIEZO_GPIO_POS_PIN,
-        .speed_mode = LEDC_HIGH_SPEED_MODE,
+        .speed_mode = LEDC_LOW_SPEED_MODE,
         .timer_sel = LEDC_TIMER_1
 
     },
@@ -67,7 +67,7 @@ ledc_channel_config_t buzz_channel[2] = {
         .channel = BUZ_PWM_CH2,
         .duty = 0,
         .gpio_num = PIEZO_GPIO_NEG_PIN,
-        .speed_mode = LEDC_HIGH_SPEED_MODE,
+        .speed_mode = LEDC_LOW_SPEED_MODE,
         .timer_sel = LEDC_TIMER_1
 
     },
@@ -85,8 +85,8 @@ void piezoInit()
     ledc_timer_config_t ledc_timer = {
         .duty_resolution = PIEZO_PWM_BITS, // resolution of PWM duty
         .freq_hz = 4000,                     // frequency of PWM signal
-        .speed_mode = LEDC_HIGH_SPEED_MODE,   // timer mode
-        .timer_num = LEDC_TIMER_0,            // timer index
+        .speed_mode = LEDC_LOW_SPEED_MODE,   // timer mode
+        .timer_num = LEDC_TIMER_1,            // timer index
         // .clk_cfg = LEDC_AUTO_CLK,              // Auto select the source clock
     };
 

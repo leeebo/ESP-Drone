@@ -24,6 +24,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+
 #include "imu_types.h"
 
 // Naive 3d vector type.

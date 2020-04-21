@@ -33,14 +33,14 @@ static platformConfig_t configs[] = {
 
     {
         .deviceType = "EP20",
-        .deviceTypeName = "ESPlane 2.0 With ESP32",
+        .deviceTypeName = "ESPlane 2.0 ",
         .sensorImplementation = SensorImplementation_mpu6050_HMC5883L_MS5611,
         .physicalLayoutAntennasAreClose = false,
         .motorMap = motorMapDefaultBrushed,
     },
     {
         .deviceType = "EP30",
-        .deviceTypeName = "ESPlane 3.0 With ESP32-s2",
+        .deviceTypeName = "ESPlane 3.0 ",
         .sensorImplementation = SensorImplementation_mpu6050_HMC5883L_MS5611,
         .physicalLayoutAntennasAreClose = false,
         .motorMap = motorMapDefaultBrushed,

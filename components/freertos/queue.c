@@ -78,8 +78,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-
-#include "rom/ets_sys.h"
+#include "sdkconfig.h"
 
 /* Defining MPU_WRAPPERS_INCLUDED_FROM_API_FILE prevents task.h from redefining
 all the API functions to use the MPU wrappers.  That should only be done when
@@ -724,6 +723,12 @@ Queue_t * const pxQueue = ( Queue_t * ) xQueue;
 		configASSERT( !( ( xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED ) && ( xTicksToWait != 0 ) ) );
 	}
 	#endif
+	#if ( configUSE_MUTEXES == 1 && configCHECK_MUTEX_GIVEN_BY_OWNER == 1)
+	{
+		configASSERT(pxQueue->uxQueueType != queueQUEUE_IS_MUTEX || pxQueue->pxMutexHolder == NULL || xTaskGetCurrentTaskHandle() == pxQueue->pxMutexHolder);
+	}
+	#endif
+
 
 
 	/* This function relaxes the coding standard somewhat to allow return
@@ -777,7 +782,7 @@ Queue_t * const pxQueue = ( Queue_t * ) xQueue;
 								mtCOVERAGE_TEST_MARKER();
 							}
 						}
-						else if( xYieldRequired != pdFALSE )
+						else if(xYieldRequired != pdFALSE)
 						{
 							/* This path is a special case that will only get
 							executed if the task was holding multiple mutexes
@@ -810,7 +815,7 @@ Queue_t * const pxQueue = ( Queue_t * ) xQueue;
 							mtCOVERAGE_TEST_MARKER();
 						}
 					}
-					else if( xYieldRequired != pdFALSE )
+					else if(xYieldRequired != pdFALSE)
 					{
 						/* This path is a special case that will only get
 						executed if the task was holding multiple mutexes and
@@ -863,7 +868,7 @@ Queue_t * const pxQueue = ( Queue_t * ) xQueue;
 		taskENTER_CRITICAL(&pxQueue->mux);
 
 		/* Update the timeout state to see if it has expired yet. */
-		if( xTaskCheckForTimeOut( &xTimeOut, &xTicksToWait ) == pdFALSE )
+		if(xTaskCheckForTimeOut( &xTimeOut, &xTicksToWait ) == pdFALSE )
 		{
 			if( prvIsQueueFull( pxQueue ) != pdFALSE )
 			{
@@ -1327,7 +1332,7 @@ Queue_t * const pxQueue = ( Queue_t * ) xQueue;
 		space'. */
 		if( pxQueue->uxMessagesWaiting < pxQueue->uxLength )
 		{
-			traceQUEUE_SEND_FROM_ISR( pxQueue );
+			traceQUEUE_GIVE_FROM_ISR( pxQueue );
 
 			/* A task can only have an inherited priority if it is a mutex
 			holder - and if there is a mutex holder then the mutex cannot be
@@ -1421,7 +1426,7 @@ Queue_t * const pxQueue = ( Queue_t * ) xQueue;
 		}
 		else
 		{
-			traceQUEUE_SEND_FROM_ISR_FAILED( pxQueue );
+			traceQUEUE_GIVE_FROM_ISR_FAILED( pxQueue );
 			xReturn = errQUEUE_FULL;
 		}
 		taskEXIT_CRITICAL_ISR(&pxQueue->mux);
@@ -1568,7 +1573,7 @@ Queue_t * const pxQueue = ( Queue_t * ) xQueue;
 		taskENTER_CRITICAL(&pxQueue->mux);
 
 		/* Update the timeout state to see if it has expired yet. */
-		if( xTaskCheckForTimeOut( &xTimeOut, &xTicksToWait ) == pdFALSE )
+		if(xTaskCheckForTimeOut( &xTimeOut, &xTicksToWait ) == pdFALSE)
 		{
 			if( prvIsQueueEmpty( pxQueue ) != pdFALSE )
 			{
@@ -1883,7 +1888,7 @@ BaseType_t xReturn = pdFALSE;
 		}
 		#endif /* configUSE_MUTEXES */
 	}
-	else if( xPosition == queueSEND_TO_BACK )
+	else if(xPosition == queueSEND_TO_BACK)
 	{
 		( void ) memcpy( ( void * ) pxQueue->pcWriteTo, pvItemToQueue, ( size_t ) pxQueue->uxItemSize ); /*lint !e961 !e418 MISRA exception as the casts are only redundant for some ports, plus previous logic ensures a null pointer can only be passed to memcpy() if the copy size is 0. */
 		pxQueue->pcWriteTo += pxQueue->uxItemSize;

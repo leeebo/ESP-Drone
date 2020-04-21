@@ -2,9 +2,6 @@
 #define ESP32_BRIDGE_H
 
 #include "esp_err.h"
-#include "driver/gpio.h"
-#include "freertos/portmacro.h"
-
 #include "cfassert.h"
 
 #ifndef __cplusplus

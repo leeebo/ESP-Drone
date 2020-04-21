@@ -20,18 +20,18 @@
  * motors.c - Motor driver
  *
  */
-#define DEBUG_MODULE "MOTORS"
+
 #include <stdbool.h>
-#include "stm32_legacy.h"
-#include "motors.h"
-#include "pm.h"
 
 //FreeRTOS includes
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-//Logging includes
+#include "stm32_legacy.h"
+#include "motors.h"
+#include "pm_esplane.h"
 #include "log.h"
+#define DEBUG_MODULE "MOTORS"
 #include "debug_cf.h"
 
 static uint16_t motorsConvBitsTo16(uint16_t bits);
@@ -57,28 +57,28 @@ ledc_channel_config_t motors_channel[NBR_OF_MOTORS] = {
         .channel = MOT_PWM_CH1,
         .duty = 0,
         .gpio_num = MOTOR1_GPIO,
-        .speed_mode = LEDC_HIGH_SPEED_MODE,
+        .speed_mode = LEDC_LOW_SPEED_MODE,
         .timer_sel = LEDC_TIMER_0
     },
     {
         .channel = MOT_PWM_CH2,
         .duty = 0,
         .gpio_num = MOTOR2_GPIO,
-        .speed_mode = LEDC_HIGH_SPEED_MODE,
+        .speed_mode = LEDC_LOW_SPEED_MODE,
         .timer_sel = LEDC_TIMER_0
     },
     {
         .channel = MOT_PWM_CH3,
         .duty = 0,
         .gpio_num = MOTOR3_GPIO,
-        .speed_mode = LEDC_HIGH_SPEED_MODE,
+        .speed_mode = LEDC_LOW_SPEED_MODE,
         .timer_sel = LEDC_TIMER_0
     },
     {
         .channel = MOT_PWM_CH4,
         .duty = 0,
         .gpio_num = MOTOR4_GPIO,
-        .speed_mode = LEDC_HIGH_SPEED_MODE,
+        .speed_mode = LEDC_LOW_SPEED_MODE,
         .timer_sel = LEDC_TIMER_0
     },
 };
@@ -108,7 +108,7 @@ bool pwm_timmer_init()
     ledc_timer_config_t ledc_timer = {
         .duty_resolution = MOTORS_PWM_BITS, // resolution of PWM duty
         .freq_hz = 15000,					// frequency of PWM signal
-        .speed_mode = LEDC_HIGH_SPEED_MODE, // timer mode
+        .speed_mode = LEDC_LOW_SPEED_MODE, // timer mode
         .timer_num = LEDC_TIMER_0,			// timer index
         // .clk_cfg = LEDC_AUTO_CLK,              // Auto select the source clock
     };

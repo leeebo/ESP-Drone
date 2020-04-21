@@ -34,13 +34,14 @@
 #include <stdio.h>      // sprintf(), vsnprintf(), printf()
 #include <stdint.h>
 #include <string.h>     // strncpy(), strnlen()
-#define DEBUG_MODULE "VLX1"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "debug_cf.h"
+
 #include "i2cdev.h"
 #include "vl53l1x.h"
+#define DEBUG_MODULE "VLX1"
+#include "debug_cf.h"
 
 #ifdef PAL_EXTENDED
 	#include "vl53l1_register_strings.h"

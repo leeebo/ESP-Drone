@@ -33,7 +33,7 @@
 #include "log.h"
 #include "ledseq.h"
 #include "adc_esp32.h"
-#include "pm.h"
+#include "pm_esplane.h"
 #include "config.h"
 #include "system.h"
 #include "platform.h"

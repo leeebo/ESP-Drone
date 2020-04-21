@@ -31,7 +31,7 @@
 #include "crtp.h"
 #include "info.h"
 #include "version.h"
-#include "pm.h"
+#include "pm_esplane.h"
 #include "stm32_legacy.h"
 
 //CPUID access

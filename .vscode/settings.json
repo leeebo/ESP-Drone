@@ -16,6 +16,22 @@
 		"queuemonitor.h": "c",
 		"deck_spi.h": "c",
 		"eprintf.h": "c",
-		"adc_esp32.h": "c"
+		"adc_esp32.h": "c",
+		"math.h": "c",
+		"xtensa_math.h": "c",
+		"stm32_legacy.h": "c",
+		"imu.h": "c",
+		"nvicconf.h": "c",
+		"pm_esplane.h": "c",
+		"buzzer.h": "c",
+		"param.h": "c",
+		"cfassert.h": "c",
+		"debug_cf.h": "c",
+		"piezo.h": "c",
+		"motors.h": "c",
+		"portmacro.h": "c",
+		"log.h": "c",
+		"cf_math.h": "c",
+		"event_groups.h": "c"
 	},
 }

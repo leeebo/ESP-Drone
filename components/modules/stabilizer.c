@@ -30,7 +30,7 @@
 #include "log.h"
 #include "param.h"
 #include "motors.h"
-#include "pm.h"
+#include "pm_esplane.h"
 #include "esp_timer.h"
 #include "stabilizer.h"
 #include "sensors.h"

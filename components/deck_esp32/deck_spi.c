@@ -26,16 +26,15 @@
 #include "deck_spi.h"
 #include "config.h"
 #include "cfassert.h"
-#include "config.h"
 #include "nvicconf.h"
 #define DEBUG_MODULE "DECK_SPI"
 #include "debug_cf.h"
 
 #define SPI SPI1
 
-#define SPI_SCK_PIN 14
-#define SPI_MISO_PIN 12
-#define SPI_MOSI_PIN 13
+#define SPI_SCK_PIN CONFIG_SPI_PIN_CLK
+#define SPI_MISO_PIN CONFIG_SPI_PIN_MISO
+#define SPI_MOSI_PIN CONFIG_SPI_PIN_MOSI
 
 #define DUMMY_BYTE 0xA5
 

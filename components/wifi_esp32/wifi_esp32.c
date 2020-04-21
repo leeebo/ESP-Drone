@@ -3,15 +3,14 @@
 #include "config.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "freertos/event_groups.h"
 
 #include "esp_system.h"
 #include "esp_wifi.h"
-#include "esp_event_loop.h"
+#include "esp_event.h"
+#include "esp_netif.h"
 #include "lwip/err.h"
 #include "lwip/sys.h"
 #include "lwip/api.h"
-#include "tcpip_adapter.h"
 
 #include  "queuemonitor.h"
 #include "wifi_esp32.h"
@@ -42,9 +41,6 @@ static UDPPacket outPacket;
 
 static bool isInit = false;
 
-/* FreeRTOS event group to signal when we are connected*/
-static EventGroupHandle_t s_wifi_event_group;
-
 static uint8_t calculate_cksum(void *data, size_t len)
 {
     unsigned char *c = data;
@@ -58,22 +54,18 @@ static uint8_t calculate_cksum(void *data, size_t len)
     return cksum;
 }
 
-static esp_err_t event_handler(void *ctx, system_event_t *event)
+static void wifi_event_handler(void* arg, esp_event_base_t event_base,
+                                    int32_t event_id, void* event_data)
 {
-    switch (event->event_id) {
-        case SYSTEM_EVENT_AP_STACONNECTED:
-            //DEBUG_PRINT_LOCAL( "station:"MACSTR" join, AID=%d",MAC2STR(event->event_info.sta_connected.mac),event->event_info.sta_connected.aid);
-            break;
-
-        case SYSTEM_EVENT_AP_STADISCONNECTED:
-            //DEBUG_PRINT_LOCAL( "station:"MACSTR" leave, AID=%d",MAC2STR(event->event_info.sta_disconnected.mac),event->event_info.sta_disconnected.aid);
-            break;
-
-        default:
-            break;
+    if (event_id == WIFI_EVENT_AP_STACONNECTED) {
+        wifi_event_ap_staconnected_t* event = (wifi_event_ap_staconnected_t*) event_data;
+        DEBUG_PRINT_LOCAL("station "MACSTR" join, AID=%d",
+                 MAC2STR(event->mac), event->aid);
+    } else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) {
+        wifi_event_ap_stadisconnected_t* event = (wifi_event_ap_stadisconnected_t*) event_data;
+        DEBUG_PRINT_LOCAL("station "MACSTR" leave, AID=%d",
+                 MAC2STR(event->mac), event->aid);
     }
-
-    return ESP_OK;
 }
 
 
@@ -272,19 +264,26 @@ void wifiInit(void)
     if (isInit) {
         return;
     }
-
-    s_wifi_event_group = xEventGroupCreate();
+    esp_netif_t *ap_netif = NULL;
+    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+    esp_netif_create_default_wifi_ap();
     uint8_t mac[6];
-    static wifi_country_t wifi_country = {.cc = "JP", .schan = 1, .nchan = 14, .policy = WIFI_COUNTRY_POLICY_MANUAL};
-
-    tcpip_adapter_init();
-    ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL))
+ // static wifi_country_t wifi_country = {.cc = "JP", .schan = 1, .nchan = 14, .policy = WIFI_COUNTRY_POLICY_MANUAL};
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-    ESP_ERROR_CHECK(esp_wifi_set_country(&wifi_country)); // set locales for RF and channels
+
+        ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
+                                                        ESP_EVENT_ANY_ID,
+                                                        &wifi_event_handler,
+                                                        NULL,
+                                                        NULL));
+
+// ESP_ERROR_CHECK(esp_wifi_set_country(&wifi_country)); // set locales for RF and channels
     ESP_ERROR_CHECK(esp_wifi_get_mac(ESP_IF_WIFI_AP, mac));
     sprintf(WIFI_SSID, "ESPLANE_%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+ 
     wifi_config_t wifi_config;
     memcpy(wifi_config.ap.ssid, WIFI_SSID, strlen(WIFI_SSID) + 1) ;
     wifi_config.ap.ssid_len = strlen(WIFI_SSID);
@@ -301,15 +300,14 @@ void wifiInit(void)
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
 
-
-    tcpip_adapter_ip_info_t ip_info = {
+     esp_netif_ip_info_t ip_info = {
         .ip.addr = ipaddr_addr("192.168.43.42"),
         .netmask.addr = ipaddr_addr("255.255.255.0"),
         .gw.addr      = ipaddr_addr("192.168.43.42"),
     };
-    ESP_ERROR_CHECK(tcpip_adapter_dhcps_stop(TCPIP_ADAPTER_IF_AP));
-    ESP_ERROR_CHECK(tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_AP, &ip_info));
-    ESP_ERROR_CHECK(tcpip_adapter_dhcps_start(TCPIP_ADAPTER_IF_AP));
+    ESP_ERROR_CHECK(esp_netif_dhcps_stop(ap_netif));
+    ESP_ERROR_CHECK(esp_netif_set_ip_info(ap_netif, &ip_info));
+    ESP_ERROR_CHECK(esp_netif_dhcps_start(ap_netif));
 
     DEBUG_PRINT_LOCAL("wifi_init_softap complete.SSID:%s password:%s", WIFI_SSID, WIFI_PWD);
 

@@ -20,23 +20,23 @@
  * vl53l1x.c: Time-of-flight distance sensor driver
  */
 
-#define DEBUG_MODULE "ZR2"
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
 #include "config.h"
 //#include "deck.h"
 #include "system.h"
-#include "debug_cf.h"
 #include "log.h"
 #include "param.h"
 #include "range.h"
-
 #include "i2cdev.h"
 #include "zranger2.h"
 #include "vl53l1x.h"
 
 #include "cf_math.h"
+#define DEBUG_MODULE "ZR2"
+#include "debug_cf.h"
 
 // Measurement noise model
 static const float expPointA = 2.5f;

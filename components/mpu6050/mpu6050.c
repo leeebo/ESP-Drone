@@ -27,18 +27,19 @@
  THE SOFTWARE.
  ===============================================
  */
-#define DEBUG_MODULE "MPU6050"
 
-#include "stm32_legacy.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-
-// TA: Maybe not so good to bring in these dependencies...
-#include "debug_cf.h"
-#include "eprintf.h"
 #include "i2cdev.h"
 
 #include "mpu6050.h"
+#include "eprintf.h"
+#include "stm32_legacy.h"
+#define DEBUG_MODULE "MPU6050"
+#include "debug_cf.h"
+
+
+
 
 static uint8_t devAddr;
 static I2C_Dev *I2Cx;

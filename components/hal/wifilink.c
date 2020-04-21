@@ -33,7 +33,7 @@
 #include "crtp.h"
 #include "configblock.h"
 #include "ledseq.h"
-#include "pm.h"
+#include "pm_esplane.h"
 #include "queuemonitor.h"
 #include "wifi_esp32.h"
 #include "stm32_legacy.h"

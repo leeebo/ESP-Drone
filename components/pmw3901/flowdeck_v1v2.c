@@ -19,26 +19,23 @@
  * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
  */
 /* flowdeck.c: Flow deck driver */
-#define DEBUG_MODULE "FLOW"
+#include <stdlib.h>
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "debug_cf.h"
 
 //#include "deck.h"
-#include "debug_cf.h"
+#include "pmw3901.h"
 #include "system.h"
 #include "log.h"
 #include "param.h"
-#include "pmw3901.h"
 #include "sleepus.h"
 #include "config.h"
-
 #include "stabilizer_types.h"
 #include "estimator.h"
-
 #include "cf_math.h"
-
-#include <stdlib.h>
+#define DEBUG_MODULE "FLOW"
+#include "debug_cf.h"
 
 #define AVERAGE_HISTORY_LENGTH 4
 #define OULIER_LIMIT 100

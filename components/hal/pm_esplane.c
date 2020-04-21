@@ -29,7 +29,7 @@
 
 #include "config.h"
 #include "system.h"
-#include "pm.h"
+#include "pm_esplane.h"
 #include "adc_esp32.h"
 #include "led.h"
 #include "log.h"

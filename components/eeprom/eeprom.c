@@ -24,14 +24,15 @@
 
 #include <string.h>
 
+#include "esp_err.h"
+#include "esp_spi_flash.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
 #include "eeprom.h"
-#include "esp_spi_flash.h"
 #include "debug_cf.h"
 #include "eprintf.h"
-#include "esp_err.h"
+
 
 #ifdef EEPROM_RUN_WRITE_READ_TEST
 static bool eepromTestWriteRead(void);

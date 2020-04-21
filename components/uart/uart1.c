@@ -31,7 +31,6 @@
 //#include "nvic.h"
 #include "uart1.h"
 #include "cfassert.h"
-#include "config.h"
 #include "nvicconf.h"
 
 /** This uart is conflicting with SPI2 DMA used in sensors_bmi088_spi_bmp388.c
