@@ -52,10 +52,17 @@
 #define MOTOR_M3  2
 #define MOTOR_M4  3
 
-#define MOTOR1_GPIO  CONFIG_MOTOR01_PIN         // M1 for ESP32FC
-#define MOTOR2_GPIO  CONFIG_MOTOR02_PIN        // M2 for ESP32FC
-#define MOTOR3_GPIO  CONFIG_MOTOR03_PIN        // M3 for ESP32FC
-#define MOTOR4_GPIO  CONFIG_MOTOR04_PIN        // M4 for ESP32FC
+#ifdef TARGET_ESPLANE_S2
+    #define MOTOR3_GPIO  CONFIG_MOTOR01_PIN         // M1 for ESP32FC
+    #define MOTOR4_GPIO  CONFIG_MOTOR02_PIN        // M2 for ESP32FC
+    #define MOTOR1_GPIO  CONFIG_MOTOR03_PIN        // M3 for ESP32FC
+    #define MOTOR2_GPIO  CONFIG_MOTOR04_PIN        // M4 for ESP32FC
+#else
+    #define MOTOR1_GPIO  CONFIG_MOTOR01_PIN         // M1 for ESP32FC
+    #define MOTOR2_GPIO  CONFIG_MOTOR02_PIN        // M2 for ESP32FC
+    #define MOTOR3_GPIO  CONFIG_MOTOR03_PIN        // M3 for ESP32FC
+    #define MOTOR4_GPIO  CONFIG_MOTOR04_PIN        // M4 for ESP32FC
+#endif
 
 #define MOT_PWM_CH1  4      // Motor M1 pwmchannel
 #define MOT_PWM_CH2  5      // Motor M2 pwmchannel
@@ -63,9 +70,9 @@
 #define MOT_PWM_CH4  7      // Motor M4 pwmchannel     
 
 // Test defines
-#define MOTORS_TEST_RATIO         (uint16_t)(0.05*(1<<16))
-#define MOTORS_TEST_ON_TIME_MS    50
-#define MOTORS_TEST_DELAY_TIME_MS 150
+#define MOTORS_TEST_RATIO         (uint16_t)(0.08*(1<<16))
+#define MOTORS_TEST_ON_TIME_MS    100
+#define MOTORS_TEST_DELAY_TIME_MS 200
 
 // Sound defines
 #define C4    262

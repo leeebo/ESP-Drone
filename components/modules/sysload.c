@@ -39,7 +39,7 @@
 static void timerHandler(xTimerHandle timer);
 
 static bool initialized = false;
-static uint8_t triggerDump = 2;
+static uint8_t triggerDump = 1;
 
 typedef struct {
     uint32_t ulRunTimeCounter;

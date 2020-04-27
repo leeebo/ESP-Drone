@@ -273,7 +273,7 @@ static void sensorsTask(void *param)
             /* sensors step 4- Unlock stabilizer task */
             xSemaphoreGive(dataReady);
 #ifdef DEBUG_EP2
-            DEBUG_PRINTD("ax = %f,  ay = %f,  az = %f,  gx = %f,  gy = %f,  gz = %f , hx = %f , hy = %f, hz =%f \n", sensorData.acc.x, sensorData.acc.y, sensorData.acc.z, sensorData.gyro.x, sensorData.gyro.y, sensorData.gyro.z, sensorData.mag.x, sensorData.mag.y, sensorData.mag.z);
+            DEBUG_PRINTI("ax = %f,  ay = %f,  az = %f,  gx = %f,  gy = %f,  gz = %f , hx = %f , hy = %f, hz =%f \n", sensorData.acc.x, sensorData.acc.y, sensorData.acc.z, sensorData.gyro.x, sensorData.gyro.y, sensorData.gyro.z, sensorData.mag.x, sensorData.mag.y, sensorData.mag.z);
 #endif
         }
     }
@@ -324,6 +324,15 @@ void processAccGyroMeasurements(const uint8_t *buffer)
 
     Axis3f accScaled;
 
+#ifdef TARGET_ESPLANE_S2
+    /* sensors step 2.1 read from buffer */
+    accelRaw.y = (((int16_t)buffer[0]) << 8) | buffer[1];
+    accelRaw.x = (((int16_t)buffer[2]) << 8) | buffer[3];
+    accelRaw.z = (((int16_t)buffer[4]) << 8) | buffer[5];
+    gyroRaw.y = (((int16_t)buffer[8]) << 8) | buffer[9];
+    gyroRaw.x = (((int16_t)buffer[10]) << 8) | buffer[11];
+    gyroRaw.z = (((int16_t)buffer[12]) << 8) | buffer[13];
+#else
     /* sensors step 2.1 read from buffer */
     accelRaw.x = (((int16_t)buffer[0]) << 8) | buffer[1];
     accelRaw.y = (((int16_t)buffer[2]) << 8) | buffer[3];
@@ -331,6 +340,7 @@ void processAccGyroMeasurements(const uint8_t *buffer)
     gyroRaw.x = (((int16_t)buffer[8]) << 8) | buffer[9];
     gyroRaw.y = (((int16_t)buffer[10]) << 8) | buffer[11];
     gyroRaw.z = (((int16_t)buffer[12]) << 8) | buffer[13];
+#endif
 
 #ifdef GYRO_BIAS_LIGHT_WEIGHT
     gyroBiasFound = processGyroBiasNoBuffer(gyroRaw.x, gyroRaw.y, gyroRaw.z, &gyroBias);
@@ -345,13 +355,23 @@ void processAccGyroMeasurements(const uint8_t *buffer)
     }
 
     /* sensors step 2.4 convert  digtal value to physical angle */
+#ifdef TARGET_ESPLANE_S2
+    sensorData.gyro.x = -(gyroRaw.x - gyroBias.x) * SENSORS_DEG_PER_LSB_CFG;
+#else
     sensorData.gyro.x = (gyroRaw.x - gyroBias.x) * SENSORS_DEG_PER_LSB_CFG;
+#endif
+
     sensorData.gyro.y = (gyroRaw.y - gyroBias.y) * SENSORS_DEG_PER_LSB_CFG;
     sensorData.gyro.z = (gyroRaw.z - gyroBias.z) * SENSORS_DEG_PER_LSB_CFG;
     /* sensors step 2.5 low pass filter */
     applyAxis3fLpf((lpf2pData *)(&gyroLpf), &sensorData.gyro);
 
-    accScaled.x = (accelRaw.x) * SENSORS_G_PER_LSB_CFG / accScale;
+#ifdef TARGET_ESPLANE_S2
+    accScaled.x = -(accelRaw.x) * SENSORS_G_PER_LSB_CFG / accScale;
+#else
+    accScaled.x = (accelRaw.x) * SENSORS_G_PER_LSB_CFG / accScale;   
+#endif
+
     accScaled.y = (accelRaw.y) * SENSORS_G_PER_LSB_CFG / accScale;
     accScaled.z = (accelRaw.z) * SENSORS_G_PER_LSB_CFG / accScale;
 

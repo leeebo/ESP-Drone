@@ -71,7 +71,11 @@ void spiBegin(void)
         /*.pre_cb = lcd_spi_pre_transfer_callback, //Specify pre-transfer callback to handle D/C line*/
     };
     //Initialize the SPI bus
+#ifdef TARGET_MCU_ESP32S2
+    ret = spi_bus_initialize(HSPI_HOST, &buscfg, 0);
+#else
     ret = spi_bus_initialize(HSPI_HOST, &buscfg, 1);
+#endif
     ESP_ERROR_CHECK(ret);
     //Attach the pmw3901 to the SPI bus
     ret = spi_bus_add_device(HSPI_HOST, &devcfg, &spi);

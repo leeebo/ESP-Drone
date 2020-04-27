@@ -153,7 +153,7 @@ void systemTask(void *arg)
     commInit();
     commanderInit();
 
-    StateEstimatorType estimator = kalmanEstimator;
+    StateEstimatorType estimator = complementaryEstimator;
     estimatorKalmanTaskInit();
     stabilizerInit(estimator);
     soundInit();
