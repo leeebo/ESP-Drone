@@ -26,7 +26,6 @@
 #include "freertos/FreeRTOS.h"
 
 #include "crtp_commander.h"
-
 #include "commander.h"
 #include "param.h"
 #include "crtp.h"

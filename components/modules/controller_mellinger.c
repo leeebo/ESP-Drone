@@ -36,10 +36,9 @@ We added the following:
 */
 
 #include <math.h>
-#define DEBUG_MODULE "CTRL_M"
+
 #include "param.h"
 #include "log.h"
-#include "debug_cf.h"
 #include "math3d.h"
 #include "position_controller.h"
 #include "controller_mellinger.h"

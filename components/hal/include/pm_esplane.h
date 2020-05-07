@@ -24,6 +24,7 @@
 #define PM_H_
 
 #include "driver/adc.h"
+#include "syslink.h"
 
 #ifndef CRITICAL_LOW_VOLTAGE
 #define PM_BAT_CRITICAL_LOW_VOLTAGE   3.0f
@@ -103,6 +104,8 @@ bool pmTest(void);
 void pmTask(void *param);
 
 void pmSetChargeState(PMChargeStates chgState);
+void pmSyslinkUpdate(SyslinkPacket *slp);
+
 /**
  * Returns the battery voltage i volts as a float
  */

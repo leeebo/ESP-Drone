@@ -23,7 +23,6 @@
 
 #include "sensfusion6.h"
 #include "log.h"
-#include "debug_cf.h"
 #include "param.h"
 
 #ifndef M_PI

@@ -44,6 +44,7 @@
 #define DEBUG_MODULE "LOG"
 #include "debug_cf.h"
 #include "stm32_legacy.h"
+#include "static_mem.h"
 
 #if 0
 #define LOG_DEBUG(fmt, ...) DEBUG_PRINTD("D/log " fmt, ## __VA_ARGS__)
@@ -87,14 +88,16 @@ struct log_ops {
 };
 
 struct log_block {
-    int id;
-    xTimerHandle timer;
-    struct log_ops *ops;
+  int id;
+  xTimerHandle timer;
+  StaticTimer_t timerBuffer;
+  struct log_ops * ops;
 };
 
 static struct log_ops logOps[LOG_MAX_OPS];
 static struct log_block logBlocks[LOG_MAX_BLOCKS];
 static xSemaphoreHandle logLock;
+static StaticSemaphore_t logLockBuffer;
 
 struct ops_setting {
     uint8_t logType;
@@ -161,6 +164,8 @@ static int logStopBlock(int id);
 static void logReset();
 static acquisitionType_t acquisitionTypeFromLogType(uint8_t logType);
 
+STATIC_MEM_TASK_ALLOC(logTask, LOG_TASK_STACKSIZE);
+
 void logInit(void)
 {
     int i;
@@ -204,8 +209,8 @@ void logInit(void)
         logsCrc = crcSlow(p.data, len);
     }
 
-    // Big lock that protects the log datastructures
-    logLock = xSemaphoreCreateMutex();
+  // Big lock that protects the log datastructures
+  logLock = xSemaphoreCreateMutexStatic(&logLockBuffer);
 
     for (i = 0; i < logsLen; i++) {
         if (!(logs[i].type & LOG_GROUP)) {
@@ -221,9 +226,8 @@ void logInit(void)
     //Init data structures and set the log subsystem in a known state
     logReset();
 
-    //Start the log task
-    xTaskCreate(logTask, LOG_TASK_NAME,
-                LOG_TASK_STACKSIZE, NULL, LOG_TASK_PRI, NULL);
+  //Start the log task
+  STATIC_MEM_TASK_CREATE(logTask, logTask, LOG_TASK_NAME, NULL, LOG_TASK_PRI);
 
     isInit = true;
 }
@@ -450,10 +454,10 @@ static int logCreateBlock(unsigned char id, struct ops_setting *settings, int le
         return ENOMEM;
     }
 
-    logBlocks[i].id = id;
-    logBlocks[i].timer = xTimerCreate("logTimer", M2T(1000),
-                                      pdTRUE, &logBlocks[i], logBlockTimed);
-    logBlocks[i].ops = NULL;
+  logBlocks[i].id = id;
+  logBlocks[i].timer = xTimerCreateStatic("logTimer", M2T(1000), pdTRUE,
+    &logBlocks[i], logBlockTimed, &logBlocks[i].timerBuffer);
+  logBlocks[i].ops = NULL;
 
     if (logBlocks[i].timer == NULL) {
         logBlocks[i].id = BLOCK_ID_FREE;
@@ -483,10 +487,10 @@ static int logCreateBlockV2(unsigned char id, struct ops_setting_v2 *settings, i
         return ENOMEM;
     }
 
-    logBlocks[i].id = id;
-    logBlocks[i].timer = xTimerCreate("logTimer", M2T(1000),
-                                      pdTRUE, &logBlocks[i], logBlockTimed);
-    logBlocks[i].ops = NULL;
+  logBlocks[i].id = id;
+  logBlocks[i].timer = xTimerCreateStatic("logTimer", M2T(1000), pdTRUE,
+    &logBlocks[i], logBlockTimed, &logBlocks[i].timerBuffer);
+  logBlocks[i].ops = NULL;
 
     if (logBlocks[i].timer == NULL) {
         logBlocks[i].id = BLOCK_ID_FREE;

@@ -29,12 +29,13 @@
 
 #include "cfassert.h"
 #include "param.h"
+
 #include "sysload.h"
 #include "stm32_legacy.h"
 #define DEBUG_MODULE "SYSLOAD"
 #include "debug_cf.h"
 
-#define TIMER_PERIOD M2T(6000)
+#define TIMER_PERIOD M2T(5000)
 
 static void timerHandler(xTimerHandle timer);
 
@@ -51,12 +52,13 @@ static taskData_t previousSnapshot[TASK_MAX_COUNT];
 static int taskTopIndex = 0;
 static uint32_t previousTotalRunTime = 0;
 
-void sysLoadInit()
-{
-    ASSERT(!initialized);
+static StaticTimer_t timerBuffer;
 
-    xTimerHandle timer = xTimerCreate("sysLoadMonitorTimer", TIMER_PERIOD, pdTRUE, NULL, timerHandler);
-    xTimerStart(timer, 100);
+void sysLoadInit() {
+  ASSERT(!initialized);
+
+  xTimerHandle timer = xTimerCreateStatic( "sysLoadMonitorTimer", TIMER_PERIOD, pdTRUE, NULL, timerHandler, &timerBuffer);
+  xTimerStart(timer, 100);
 
     initialized = true;
 }

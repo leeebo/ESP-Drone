@@ -26,6 +26,7 @@
 #include "freertos/task.h"
 
 #include "system.h"
+#include "static_mem.h"
 
 #include "app.h"
 
@@ -39,6 +40,8 @@
 
 static bool isInit = false;
 
+STATIC_MEM_TASK_ALLOC(appTask, APP_STACKSIZE);
+
 static void appTask(void *param);
 
 void __attribute__((weak)) appInit()
@@ -47,9 +50,8 @@ void __attribute__((weak)) appInit()
         return;
     }
 
-    xTaskCreate(appTask, "app", APP_STACKSIZE, NULL,
-                APP_PRIORITY, NULL);
-    isInit = true;
+  STATIC_MEM_TASK_CREATE(appTask, appTask, "app", NULL, APP_PRIORITY);
+  isInit = true;
 }
 
 static void appTask(void *param)

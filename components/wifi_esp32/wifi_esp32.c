@@ -241,10 +241,9 @@ static void udp_server_tx_task(void *pvParameters)
 {
     struct netbuf *sendbuf = NULL;
     uint8_t sendbuffTemp[64] = {0};
-    portBASE_TYPE xTaskWokenByReceive = pdFALSE;
-
+    
     while (TRUE) {
-        if (xQueueReceive(udpDataTx, &outPacket, &xTaskWokenByReceive) == pdTRUE) {
+        if (xQueueReceive(udpDataTx, &outPacket, 5) == pdTRUE) {
             memcpy(sendbuffTemp, outPacket.data, outPacket.size);
             sendbuffTemp[outPacket.size + 1] = '\0';
 #ifdef DEBUG_UDP
@@ -258,7 +257,7 @@ static void udp_server_tx_task(void *pvParameters)
             sendbuf->p->payload = sendbuffTemp;
 
             if (udp_server_netconn != NULL) {
-                if (netconn_sendto(udp_server_netconn, sendbuf, &sendbuf->addr, UDP_REMOTE_PORT) == ERR_OK);
+                netconn_sendto(udp_server_netconn, sendbuf, &sendbuf->addr, UDP_REMOTE_PORT) ;
 
 #ifdef DEBUG_UDP
                 DEBUG_PRINT_LOCAL("Send data to");
@@ -269,9 +268,8 @@ static void udp_server_tx_task(void *pvParameters)
 
 #endif
             }
-        }
-
         netbuf_delete(sendbuf);
+        }    
     }
 
     vTaskDelete(NULL);

@@ -26,7 +26,6 @@
 /*FreeRtos includes*/
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
-#include "console.h"
 
 #include "crtp.h"
 

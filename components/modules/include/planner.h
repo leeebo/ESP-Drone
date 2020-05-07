@@ -87,13 +87,16 @@ bool plan_is_stopped(struct planner *p);
 struct traj_eval plan_current_goal(struct planner *p, float t);
 
 // start a takeoff trajectory.
-int plan_takeoff(struct planner *p, struct vec pos, float yaw, float height, float duration, float t);
+int plan_takeoff(struct planner *p, struct vec curr_pos, float curr_yaw, float hover_height, float hover_yaw, float duration, float t);
 
 // start a landing trajectory.
-int plan_land(struct planner *p, struct vec pos, float yaw, float height, float duration, float t);
+int plan_land(struct planner *p, struct vec curr_pos, float curr_yaw, float hover_height, float hover_yaw, float duration, float t);
 
 // move to a given position, then hover there.
 int plan_go_to(struct planner *p, bool relative, struct vec hover_pos, float hover_yaw, float duration, float t);
+
+// same as above, but with current state provided from outside.
+int plan_go_to_from(struct planner *p, const struct traj_eval *curr_eval, bool relative, struct vec hover_pos, float hover_yaw, float duration, float t);
 
 // start trajectory
 int plan_start_trajectory(struct planner *p, const struct piecewise_traj* trajectory, bool reversed);

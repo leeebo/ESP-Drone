@@ -182,7 +182,7 @@ int xt_clock_freq(void) __attribute__((deprecated));
 #endif
 
 #ifndef CONFIG_APPTRACE_ENABLE
-#define configMINIMAL_STACK_SIZE		2048
+#define configMINIMAL_STACK_SIZE	   768
 #else
 /* apptrace module requires at least 2KB of stack per task */
 #define configMINIMAL_STACK_SIZE		2048

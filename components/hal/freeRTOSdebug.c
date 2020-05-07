@@ -29,31 +29,34 @@
 #include "debug_cf.h"
 #include "nvicconf.h"
 #include "led.h"
-
+#include "power_distribution.h"
 
 uint32_t traceTickCount;
 
-void vApplicationMallocFailedHook(void)
-{
-    portDISABLE_INTERRUPTS();
-    DEBUG_PRINTE("Malloc failed!\n");
-    ledSet(ERR_LED1, 1);
-    ledSet(ERR_LED2, 1);
+//TODO:disable system hook now
+// void vApplicationMallocFailedHook(void)
+// {
+//   portDISABLE_INTERRUPTS();
+//   DEBUG_PRINTE("Malloc failed!\n");
+//   ledSet(ERR_LED1, 1);
+//   ledSet(ERR_LED2, 1);
+//   powerStop();
+//   storeAssertTextData("Malloc failed");
+//   while(1);
+// }
 
-    while (1);
-}
-
-#if (configCHECK_FOR_STACK_OVERFLOW == 1)
-void vApplicationStackOverflowHook(xTaskHandle *pxTask, signed portCHAR *pcTaskName)
-{
-    portDISABLE_INTERRUPTS();
-    DEBUG_PRINTE("\nStack overflow!\n");
-    ledSet(ERR_LED1, 1);
-    ledSet(ERR_LED2, 1);
-
-    while (1);
-}
-#endif
+//#if (configCHECK_FOR_STACK_OVERFLOW > 0)
+// void vApplicationStackOverflowHook(xTaskHandle *pxTask, signed portCHAR *pcTaskName)
+// {
+//     portDISABLE_INTERRUPTS();
+//     DEBUG_PRINTE("\nStack overflow!\n");
+//     ledSet(ERR_LED1, 1);
+//     ledSet(ERR_LED2, 1);
+// 	powerStop();
+// 	storeAssertTextData("Stack overflow");
+//     while (1);
+// }
+//#endif
 
 #ifdef UART_OUTPUT_TRACE_DATA
 void debugSendTraceInfo(unsigned int taskNbr)
@@ -65,7 +68,31 @@ void debugSendTraceInfo(unsigned int taskNbr)
 
 void debugInitTrace(void)
 {
-//TODO:implement
+  /*TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
+  NVIC_InitTypeDef NVIC_InitStructure;
+
+  //Enable the Timer
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);
+
+  //Timer configuration
+  TIM_TimeBaseStructure.TIM_Period = 0xFFFF;
+  TIM_TimeBaseStructure.TIM_Prescaler = 72;
+  TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
+  TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
+  TIM_TimeBaseStructure.TIM_RepetitionCounter = 0;
+  TIM_TimeBaseInit(TIM1, &TIM_TimeBaseStructure);
+
+  NVIC_InitStructure.NVIC_IRQChannel = TIM1_UP_IRQn;
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = NVIC_TRACE_TIM_PRI;
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+  NVIC_Init(&NVIC_InitStructure);
+
+  DBGMCU_Config(DBGMCU_TIM1_STOP, ENABLE);
+  TIM_ITConfig(TIM1, TIM_IT_Update, ENABLE);
+  TIM_Cmd(TIM1, ENABLE);
+
+  traceTickCount = 0;*/
 }
 #else
 void debugSendTraceInfo(unsigned int taskNbr)

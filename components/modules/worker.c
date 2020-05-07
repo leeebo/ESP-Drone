@@ -29,6 +29,8 @@
 
 #include "worker.h"
 #include "queuemonitor.h"
+#include "static_mem.h"
+
 #include "console.h"
 #include "stm32_legacy.h"
 
@@ -40,15 +42,15 @@ struct worker_work {
 };
 
 static xQueueHandle workerQueue;
+STATIC_MEM_QUEUE_ALLOC(workerQueue, WORKER_QUEUE_LENGTH, sizeof(struct worker_work));
 
 void workerInit()
 {
-    if (workerQueue) {
-        return;
-    }
+  if (workerQueue)
+    return;
 
-    workerQueue = xQueueCreate(WORKER_QUEUE_LENGTH, sizeof(struct worker_work));
-    DEBUG_QUEUE_MONITOR_REGISTER(workerQueue);
+  workerQueue = STATIC_MEM_QUEUE_CREATE(workerQueue);
+  DEBUG_QUEUE_MONITOR_REGISTER(workerQueue);
 }
 
 bool workerTest()

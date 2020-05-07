@@ -40,11 +40,13 @@
 
 #define DEBUG_MODULE "WIFILINK"
 #include "debug_cf.h"
+#include "static_mem.h"
 
 #define WIFI_ACTIVITY_TIMEOUT_MS (1000)
 
 static bool isInit = false;
 static xQueueHandle crtpPacketDelivery;
+STATIC_MEM_QUEUE_ALLOC(crtpPacketDelivery, 16, sizeof(CRTPPacket));
 static uint8_t sendBuffer[64];
 
 static UDPPacket wifiIn;
@@ -54,6 +56,8 @@ static uint32_t lastPacketTick;
 static int wifilinkSendPacket(CRTPPacket *p);
 static int wifilinkSetEnable(bool enable);
 static int wifilinkReceiveCRTPPacket(CRTPPacket *p);
+
+STATIC_MEM_TASK_ALLOC(wifilinkTask, USBLINK_TASK_STACKSIZE);
 
 static float rch, pch, ych;
 static uint16_t tch;
@@ -165,10 +169,10 @@ void wifilinkInit()
     //TODO: Initialize the wifi peripheral
     //wifiInit();
 
-    crtpPacketDelivery = xQueueCreate(16, sizeof(CRTPPacket));
+    crtpPacketDelivery = STATIC_MEM_QUEUE_CREATE(crtpPacketDelivery);
     DEBUG_QUEUE_MONITOR_REGISTER(crtpPacketDelivery);
 
-    xTaskCreate(wifilinkTask, WIFILINK_TASK_NAME, WIFILINK_TASK_STACKSIZE, NULL, WIFILINK_TASK_PRI, NULL);
+    STATIC_MEM_TASK_CREATE(wifilinkTask, wifilinkTask,WIFILINK_TASK_NAME,NULL, WIFILINK_TASK_PRI);
 
     isInit = true;
 }

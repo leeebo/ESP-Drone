@@ -325,6 +325,7 @@ static EffectCall effects[] = {
 };
 
 static xTimerHandle timer;
+static StaticTimer_t timerBuffer;
 static uint32_t counter = 0;
 
 static void soundTimer(xTimerHandle timer)
@@ -353,8 +354,8 @@ void soundInit(void)
 
     neffect = sizeof(effects) / sizeof(effects[0]) - 1;
 
-    timer = xTimerCreate("SoundTimer", M2T(10), pdTRUE, NULL, soundTimer);
-    xTimerStart(timer, 100);
+  timer = xTimerCreateStatic("SoundTimer", M2T(10), pdTRUE, NULL, soundTimer, &timerBuffer);
+  xTimerStart(timer, 100);
 
     isInit = true;
 #endif

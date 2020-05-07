@@ -45,6 +45,7 @@
 #include "statsCnt.h"
 #define DEBUG_MODULE "STAB"
 #include "debug_cf.h"
+#include "static_mem.h"
 
 static bool isInit;
 static bool emergencyStop = false;
@@ -120,6 +121,7 @@ static float accVarZ[NBR_OF_MOTORS];
 static uint8_t motorPass = 0;
 static uint16_t motorTestCount = 0;
 
+STATIC_MEM_TASK_ALLOC(stabilizerTask, STABILIZER_TASK_STACKSIZE);
 
 static void stabilizerTask(void *param);
 static void testProps(sensorData_t *sensors);
@@ -187,8 +189,7 @@ void stabilizerInit(StateEstimatorType estimator)
     estimatorType = getStateEstimator();
     controllerType = getControllerType();
 
-    xTaskCreate(stabilizerTask, STABILIZER_TASK_NAME,
-                STABILIZER_TASK_STACKSIZE, NULL, STABILIZER_TASK_PRI, NULL);
+    STATIC_MEM_TASK_CREATE(stabilizerTask, stabilizerTask, STABILIZER_TASK_NAME, NULL, STABILIZER_TASK_PRI);
 
     isInit = true;
 }
@@ -290,13 +291,17 @@ static void stabilizerTask(void *param)
             } else {
                 powerDistribution(&control);
             }
-        }
-
-        //counting the time until a cycle is completed
-        calcSensorToOutputLatency(&sensorData);
-        tick++;
-        STATS_CNT_RATE_EVENT(&stabilizerRate);
+      //TODO: Log data to uSD card if configured
+      /*if (usddeckLoggingEnabled()
+          && usddeckLoggingMode() == usddeckLoggingMode_SynchronousStabilizer
+          && RATE_DO_EXECUTE(usddeckFrequency(), tick)) {
+        usddeckTriggerLogging();
+      }*/
     }
+    calcSensorToOutputLatency(&sensorData);
+    tick++;
+    STATS_CNT_RATE_EVENT(&stabilizerRate);
+  }
 }
 
 void stabilizerSetEmergencyStop()

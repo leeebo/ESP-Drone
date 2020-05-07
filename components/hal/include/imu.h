@@ -45,6 +45,14 @@
 #define IMU_ACC_IIR_LPF_ATTENUATION (IMU_UPDATE_FREQ / (2 * 3.1415 * IMU_ACC_WANTED_LPF_CUTOFF_HZ))
 #define IMU_ACC_IIR_LPF_ATT_FACTOR  (int)(((1<<IIR_SHIFT) / IMU_ACC_IIR_LPF_ATTENUATION) + 0.5)
 
+void imu6Init(void);
+bool imu6Test(void);
+bool imu6ManufacturingTest(void);
+void imu6Read(Axis3f* gyro, Axis3f* acc);
+void imu9Read(Axis3f* gyroOut, Axis3f* accOut, Axis3f* magOut);
+bool imu6IsCalibrated(void);
+bool imuHasBarometer(void);
+bool imuHasMangnetometer(void);
 
 
 #endif /* IMU_H_ */

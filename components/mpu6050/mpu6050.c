@@ -30,16 +30,13 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "i2cdev.h"
 
+#include "i2cdev.h"
 #include "mpu6050.h"
 #include "eprintf.h"
 #include "stm32_legacy.h"
 #define DEBUG_MODULE "MPU6050"
 #include "debug_cf.h"
-
-
-
 
 static uint8_t devAddr;
 static I2C_Dev *I2Cx;
@@ -57,9 +54,8 @@ void mpu6050Init(I2C_Dev *i2cPort)
 
     I2Cx = i2cPort;
     devAddr = MPU6050_ADDRESS_AD0_LOW;
-//FIXME    devAddr = MPU6050_ADDRESS_AD0_LOW;
-
     isInit = true;
+
 }
 
 bool mpu6050Test(void)
@@ -92,8 +88,6 @@ bool mpu6050SelfTest()
     bool testStatus = true;
     int16_t axi16, ayi16, azi16;
     int16_t gxi16, gyi16, gzi16;
-//  int8_t axfi8, ayfi8, azfi8;
-//  int8_t gxfi8, gyfi8, gzfi8;
     float axf, ayf, azf;
     float gxf, gyf, gzf;
     float axfTst, ayfTst, azfTst;

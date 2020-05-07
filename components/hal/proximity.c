@@ -25,11 +25,15 @@
 #include "freertos/task.h"
 
 #include "config.h"
+#include "deck.h"
 #include "proximity.h"
+#include "maxsonar.h"
 #include "system.h"
 #include "param.h"
 #include "log.h"
 
+#include "stm32_legacy.h"
+#include "static_mem.h"
 
 /* Flag indicating if the proximityInit() function has been called or not. */
 static bool isInit = false;
@@ -54,6 +58,8 @@ LOG_ADD(LOG_UINT32, distanceMed, &proximityDistanceMedian)
 LOG_ADD(LOG_UINT32, accuracy, &proximityAccuracy)
 LOG_GROUP_STOP(proximity)
 #endif
+
+STATIC_MEM_TASK_ALLOC(proximityTask, PROXIMITY_TASK_STACKSIZE);
 
 /**
  * This function returns the median value of an array.
@@ -169,9 +175,8 @@ void proximityInit(void)
     memset(&proximitySWin, 0, sizeof(uint32_t)*PROXIMITY_SWIN_SIZE);
 
 #if defined(PROXIMITY_ENABLED)
-    /* Only start the task if the proximity subsystem is enabled in conf.h */
-    xTaskCreate(proximityTask, PROXIMITY_TASK_NAME,
-                PROXIMITY_TASK_STACKSIZE, NULL, PROXIMITY_TASK_PRI, NULL);
+  /* Only start the task if the proximity subsystem is enabled in conf.h */
+  STATIC_MEM_TASK_CREATE(proximityTask, proximityTask, PROXIMITY_TASK_NAME, NULL, PROXIMITY_TASK_PRI);
 #endif
 
     isInit = true;

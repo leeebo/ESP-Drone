@@ -36,3 +36,10 @@
 
 #define DEG_TO_RAD (PI/180.0f)
 #define RAD_TO_DEG (180.0f/PI)
+
+#ifndef MIN
+#define MIN(v1, v2) ((v1) < (v2) ? (v1) : (v2))
+#endif
+#ifndef MAX
+#define MAX(v1, v2) ((v1) < (v2) ? (v2) : (v1))
+#endif

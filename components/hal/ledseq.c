@@ -168,6 +168,7 @@ static int state[LED_NUM][SEQ_NUM];
 static int activeSeq[LED_NUM];
 
 static xTimerHandle timer[LED_NUM];
+static StaticTimer_t timerBuffer[LED_NUM];
 
 static xSemaphoreHandle ledseqSem;
 
@@ -193,10 +194,10 @@ void ledseqInit()
         }
     }
 
-    //Init the soft timers that runs the led sequences for each leds
-    for (i = 0; i < LED_NUM; i++) {
-        timer[i] = xTimerCreate("ledseqTimer", M2T(1000), pdFALSE, (void *)i, runLedseq);
-    }
+  //Init the soft timers that runs the led sequences for each leds
+  for(i=0; i<LED_NUM; i++) {
+    timer[i] = xTimerCreateStatic("ledseqTimer", M2T(1000), pdFALSE, (void*)i, runLedseq, &timerBuffer[i]);
+  }
 
     vSemaphoreCreateBinary(ledseqSem);
 

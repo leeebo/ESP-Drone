@@ -1,0 +1,32 @@
+menu "motors config"
+
+    comment "yes choose one"
+
+    config MOTOR01_PIN
+        int "MOTOR01_PIN GPIO number"
+        range 0 43
+        default 3
+        help
+            GPIO number (IOxx) MOTOR01_PIN
+
+    config MOTOR02_PIN
+        int "MOTOR02_PIN GPIO number"
+        range 0 43
+        default 4
+        help
+            GPIO number (IOxx) MOTOR02_PIN
+    
+    config MOTOR03_PIN
+        int "MOTOR03_PIN GPIO number"
+        range 0 43
+        default 5
+        help
+            GPIO number (IOxx) MOTOR03_PIN
+
+    config MOTOR04_PIN
+        int "MOTOR04_PIN GPIO number"
+        range 0 43
+        default 6
+        help
+            GPIO number (IOxx) MOTOR04_PIN        
+endmenu

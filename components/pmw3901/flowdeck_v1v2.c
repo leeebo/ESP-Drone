@@ -24,7 +24,6 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-//#include "deck.h"
 #include "pmw3901.h"
 #include "system.h"
 #include "log.h"
@@ -56,7 +55,6 @@ float dpixely_previous = 0;
 
 static uint8_t outlierCount = 0;
 
-static bool isInit1 = false;
 static bool isInit2 = false;
 
 motionBurst_t currentMotion;
@@ -128,7 +126,7 @@ static void flowdeckTask(void *param)
 
 void flowdeck2Init()
 {
-    if (isInit1 || isInit2) {
+    if ( isInit2) {
         return;
     }
 
@@ -171,6 +169,5 @@ PARAM_ADD(PARAM_UINT8, disable, &useFlowDisabled)
 PARAM_GROUP_STOP(motion)
 
 PARAM_GROUP_START(deck)
-PARAM_ADD(PARAM_UINT8 | PARAM_RONLY, bcFlow, &isInit1)
 PARAM_ADD(PARAM_UINT8 | PARAM_RONLY, bcFlow2, &isInit2)
 PARAM_GROUP_STOP(deck)

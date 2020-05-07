@@ -22,12 +22,30 @@
  * 2016.06.15: Initial version by Mike Hamer, http://mikehamer.info
  */
 #include <math.h>
-#define DEBUG_MODULE "SENSORS"
-#include "sensors_mpu6050_hm5883L_ms5611.h"
-#include "stm32_legacy.h"
-#include "driver/gpio.h"
-#include "i2cdev.h"
 
+#include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
+#include "freertos/task.h"
+#include "freertos/queue.h"
+#include "freertos/projdefs.h"
+#include "esp_timer.h"
+#include "driver/gpio.h"
+
+#include "sensors_mpu6050_hm5883L_ms5611.h"
+#include "system.h"
+#include "configblock.h"
+#include "param.h"
+#include "log.h"
+
+#include "imu.h"
+#include "nvicconf.h"
+#include "ledseq.h"
+#include "sound.h"
+#include "filter.h"
+#include "config.h"
+#include "stm32_legacy.h"
+
+#include "i2cdev.h"
 // #include "lps25h.h"
 #include "mpu6050.h"
 #include "hmc5883l.h"
@@ -37,25 +55,9 @@
 #include "zranger2.h"
 #include "vl53l1x.h"
 #include "flowdeck_v1v2.h"
-
-#include "freertos/FreeRTOS.h"
-#include "freertos/semphr.h"
-#include "freertos/task.h"
-#include "freertos/queue.h"
-#include "freertos/projdefs.h"
-#include "esp_timer.h"
-
-#include "system.h"
-#include "configblock.h"
-#include "param.h"
-#include "log.h"
+#define DEBUG_MODULE "SENSORS"
 #include "debug_cf.h"
-#include "imu.h"
-#include "nvicconf.h"
-#include "ledseq.h"
-#include "sound.h"
-#include "filter.h"
-#include "config.h"
+#include "static_mem.h"
 
 /**
  * Enable 250Hz digital LPF mode. However does not work with
@@ -121,11 +123,18 @@ typedef struct {
 } BiasObj;
 
 static xQueueHandle accelerometerDataQueue;
+STATIC_MEM_QUEUE_ALLOC(accelerometerDataQueue, 1, sizeof(Axis3f));
 static xQueueHandle gyroDataQueue;
+STATIC_MEM_QUEUE_ALLOC(gyroDataQueue, 1, sizeof(Axis3f));
 static xQueueHandle magnetometerDataQueue;
+STATIC_MEM_QUEUE_ALLOC(magnetometerDataQueue, 1, sizeof(Axis3f));
 static xQueueHandle barometerDataQueue;
+STATIC_MEM_QUEUE_ALLOC(barometerDataQueue, 1, sizeof(baro_t));
+
 static xSemaphoreHandle sensorsDataReady;
+static StaticSemaphore_t sensorsDataReadyBuffer;
 static xSemaphoreHandle dataReady;
+static StaticSemaphore_t dataReadyBuffer;
 
 static bool isInit = false;
 static sensorData_t sensorData;
@@ -192,6 +201,7 @@ static void sensorsAddBiasValue(BiasObj *bias, int16_t x, int16_t y, int16_t z);
 static bool sensorsFindBiasValue(BiasObj *bias);
 static void sensorsAccAlignToGravity(Axis3f *in, Axis3f *out);
 
+STATIC_MEM_TASK_ALLOC(sensorsTask, SENSORS_TASK_STACKSIZE);
 bool sensorsMpu6050Hmc5883lMs5611ReadGyro(Axis3f *gyro)
 {
     return (pdTRUE == xQueueReceive(gyroDataQueue, gyro, 0));
@@ -646,13 +656,13 @@ static void sensorsSetupSlaveRead(void)
 
 static void sensorsTaskInit(void)
 {
-    accelerometerDataQueue = xQueueCreate(1, sizeof(Axis3f));
-    gyroDataQueue = xQueueCreate(1, sizeof(Axis3f));
-    magnetometerDataQueue = xQueueCreate(1, sizeof(Axis3f));
-    barometerDataQueue = xQueueCreate(1, sizeof(baro_t));
+  accelerometerDataQueue = STATIC_MEM_QUEUE_CREATE(accelerometerDataQueue);
+  gyroDataQueue = STATIC_MEM_QUEUE_CREATE(gyroDataQueue);
+  magnetometerDataQueue = STATIC_MEM_QUEUE_CREATE(magnetometerDataQueue);
+  barometerDataQueue = STATIC_MEM_QUEUE_CREATE(barometerDataQueue);
 
-    xTaskCreate(sensorsTask, SENSORS_TASK_NAME, SENSORS_TASK_STACKSIZE, NULL, SENSORS_TASK_PRI, NULL);
-    DEBUG_PRINTD("xTaskCreate sensorsTask \n");
+  STATIC_MEM_TASK_CREATE(sensorsTask, sensorsTask, SENSORS_TASK_NAME, NULL, SENSORS_TASK_PRI);
+  DEBUG_PRINTD("xTaskCreate sensorsTask \n");
 }
 
 static void IRAM_ATTR sensors_inta_isr_handler(void *arg)

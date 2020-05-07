@@ -8,6 +8,8 @@
 #include "controller_indi.h"
 
 #define DEFAULT_CONTROLLER ControllerTypePID
+#define CONTROLLER_NAME ControllerTypeAny
+
 static ControllerType currentController = ControllerTypeAny;
 
 static void initController();
@@ -26,8 +28,6 @@ static ControllerFcns controllerFunctions[] = {
     {.init = controllerINDIInit, .test = controllerINDITest, .update = controllerINDI, .name = "INDI"},
 };
 
-//TODO:
-#define CONTROLLER_NAME ControllerTypeAny
 void controllerInit(ControllerType controller)
 {
     if (controller < 0 || controller >= ControllerType_COUNT) {

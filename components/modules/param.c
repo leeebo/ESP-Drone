@@ -21,7 +21,7 @@
  */
 #include <string.h>
 #include <errno.h>
-#define DEBUG_MODULE "PARAM"
+
 /* FreeRtos includes */
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -31,8 +31,10 @@
 #include "param.h"
 #include "crc.h"
 #include "console.h"
+#define DEBUG_MODULE "PARAM"
 #include "debug_cf.h"
 #include "stm32_legacy.h"
+#include "static_mem.h"
 
 #if 0
 #define PARAM_DEBUG(fmt, ...) DEBUG_PRINTD("D/param " fmt, ## __VA_ARGS__)
@@ -96,6 +98,8 @@ static CRTPPacket p;
 
 static bool isInit = false;
 
+STATIC_MEM_TASK_ALLOC(paramTask, PARAM_TASK_STACKSIZE);
+
 void paramInit(void)
 {
     int i;
@@ -147,9 +151,8 @@ void paramInit(void)
     }
 
 
-    //Start the param task
-    xTaskCreate(paramTask, PARAM_TASK_NAME,
-                PARAM_TASK_STACKSIZE, NULL, PARAM_TASK_PRI, NULL);
+  //Start the param task
+  STATIC_MEM_TASK_CREATE(paramTask, paramTask, PARAM_TASK_NAME, NULL, PARAM_TASK_PRI);
 
     //TODO: Handle stored parameters!
 

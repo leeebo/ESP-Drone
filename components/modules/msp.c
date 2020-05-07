@@ -25,11 +25,11 @@
  *  - http://www.multiwii.com/wiki/index.php?title=Multiwii_Serial_Protocol
  *  - http://www.multiwii.com/forum/viewtopic.php?f=8&t=1516
  */
-#define DEBUG_MODULE "MSP"
+
 #include "msp.h"
-#include "debug_cf.h"
 #include "sensfusion6.h"
 #include "commander.h"
+#define DEBUG_MODULE "MSP"
 #include "debug_cf.h"
 
 // MSP command IDs

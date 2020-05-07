@@ -22,8 +22,6 @@
 
 #include <stdbool.h>
 #define DEBUG_MODULE "COMM"
-#include "string.h"
-#include "stdio.h"
 #include "comm.h"
 #include "config.h"
 #include "crtp.h"
@@ -36,8 +34,6 @@
 #include "wifilink.h"
 #include "platformservice.h"
 #include "crtp_localization_service.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
 
 static bool isInit;
 

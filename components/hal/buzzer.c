@@ -36,24 +36,22 @@ void buzzerInit()
 
 bool buzzerTest()
 {
-    return true;
+  return true;
 }
 
 void buzzerOff()
 {
-    if (ctrl) {
-        ctrl->off();
-    }
+  if (ctrl)
+    ctrl->off();
 }
 
 void buzzerOn(uint32_t freq)
 {
-    if (ctrl) {
-        ctrl->on(freq);
-    }
+  if (ctrl)
+    ctrl->on(freq);
 }
 
-void buzzerSetControl(struct buzzerControl *bc)
+void buzzerSetControl(struct buzzerControl * bc)
 {
-    ctrl = bc;
+  ctrl = bc;
 }

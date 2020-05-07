@@ -179,6 +179,14 @@ float pmGetBatteryVoltageMax(void)
     return batteryVoltageMax;
 }
 
+void pmSyslinkUpdate(SyslinkPacket *slp)
+{
+  if (slp->type == SYSLINK_PM_BATTERY_STATE) {
+    memcpy(&pmSyslinkInfo, &slp->data[0], sizeof(pmSyslinkInfo));
+    pmSetBatteryVoltage(pmSyslinkInfo.vBat);
+  }
+}
+
 void pmSetChargeState(PMChargeStates chgState)
 {
     // TODO: Send syslink packafe with charge state

@@ -1,3 +1,3 @@
 idf_component_register(SRCS "mpu6050.c"
-                       INCLUDE_DIRS "." "include"
-                        REQUIRES i2c_bus hal utils platform)
+                       INCLUDE_DIRS "include"
+                        REQUIRES i2c_bus utils platform)

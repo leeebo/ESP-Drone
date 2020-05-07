@@ -4,9 +4,9 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "freertos/queue.h"
+#include "driver/i2c.h"
 
 #include "stm32_legacy.h"
-#include "driver/i2c.h"
 
 #define I2C_NO_INTERNAL_ADDRESS   0xFFFF
 
@@ -80,11 +80,11 @@ bool i2cdrvMessageTransfer(I2cDrv *i2c, I2cMessage *message);
  * @param length        Length of message
  * @param buffer        pointer to buffer of send/receive data
  */
-// void i2cdrvCreateMessage(I2cMessage *message,
-//                       uint8_t  slaveAddress,
-//                       I2cDirection  direction,
-//                       uint32_t length,
-//                       uint8_t  *buffer);
+void i2cdrvCreateMessage(I2cMessage *message,
+                         uint8_t  slaveAddress,
+                         I2cDirection  direction,
+                         uint32_t length,
+                         uint8_t  *buffer);
 
 /**
  * Create a message to transfer with internal "reg" address. Will first do a write
@@ -97,13 +97,13 @@ bool i2cdrvMessageTransfer(I2cDrv *i2c, I2cMessage *message);
  * @param length        Length of message
  * @param buffer        pointer to buffer of send/receive data
  */
-// void i2cdrvCreateMessageIntAddr(I2cMessage *message,
-//                              uint8_t  slaveAddress,
-//                              bool IsInternal16,
-//                              uint16_t intAddress,
-//                              I2cDirection  direction,
-//                              uint32_t length,
-//                              uint8_t  *buffer);
+void i2cdrvCreateMessageIntAddr(I2cMessage *message,
+                                uint8_t  slaveAddress,
+                                bool IsInternal16,
+                                uint16_t intAddress,
+                                I2cDirection  direction,
+                                uint32_t length,
+                                uint8_t  *buffer);
 
 #endif
 

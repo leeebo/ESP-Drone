@@ -80,6 +80,8 @@ struct param_s {
 #define PARAM_FLOAT (PARAM_4BYTES | PARAM_TYPE_FLOAT | PARAM_SIGNED)
 
 /* Macros */
+#ifndef UNIT_TEST_MODE
+
 #define PARAM_ADD(TYPE, NAME, ADDRESS) \
    { .type = TYPE, .name = #NAME, .address = (void*)(ADDRESS), },
 
@@ -87,16 +89,9 @@ struct param_s {
    { \
   .type = TYPE, .name = #NAME, .address = (void*)(ADDRESS), },
 
-// Fix to make unit tests run on MacOS
-#ifdef __APPLE__
-#define PARAM_GROUP_START(NAME)  \
-  static const struct param_s __params_##NAME[] __attribute__((section("__DATA,__.param." #NAME), used)) = { \
-  PARAM_ADD_GROUP(PARAM_GROUP | PARAM_START, NAME, 0x0)
-#else
 #define PARAM_GROUP_START(NAME)  \
   static const struct param_s __params_##NAME[] __attribute__((section(".param." #NAME), used)) = { \
   PARAM_ADD_GROUP(PARAM_GROUP | PARAM_START, NAME, 0x0)
-#endif
 
 //#define PARAM_GROUP_START_SYNC(NAME, LOCK) PARAM_ADD_GROUP(PARAM_GROUP | PARAM_START, NAME, LOCK);
 
@@ -104,5 +99,14 @@ struct param_s {
   PARAM_ADD_GROUP(PARAM_GROUP | PARAM_STOP, stop_##NAME, 0x0) \
   };
 
-#endif /* __PARAM_H__ */
+#else // UNIT_TEST_MODE
 
+// Empty defines when running unit tests
+#define PARAM_ADD(TYPE, NAME, ADDRESS)
+#define PARAM_ADD_GROUP(TYPE, NAME, ADDRESS)
+#define PARAM_GROUP_START(NAME)
+#define PARAM_GROUP_STOP(NAME)
+
+#endif // UNIT_TEST_MODE
+
+#endif /* __PARAM_H__ */

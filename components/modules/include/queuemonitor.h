@@ -26,8 +26,6 @@
 
 #include "freertos/FreeRTOS.h"
 
-//#define DEBUG_QUEUE_MONITOR
-
 #ifdef DEBUG_QUEUE_MONITOR
   #include "freertos/queue.h"
 

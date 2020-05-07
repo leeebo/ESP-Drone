@@ -48,7 +48,7 @@
 #include "commander.h"
 #include "console.h"
 #include "wifilink.h"
-#include "proximity.h"
+//#include "proximity.h"
 //#include "watchdog.h"
 #include "queuemonitor.h"
 #include "buzzer.h"
@@ -61,12 +61,18 @@
 #include "stm32_legacy.h"
 #define DEBUG_MODULE "SYS"
 #include "debug_cf.h"
+#include "static_mem.h"
 
 /* Private variable */
 static bool selftestPassed;
 static bool canFly;
 static bool isInit;
-static xSemaphoreHandle canStartMutex;
+
+STATIC_MEM_TASK_ALLOC(systemTask, SYSTEM_TASK_STACKSIZE);
+
+/* System wide synchronisation */
+xSemaphoreHandle canStartMutex;
+static StaticSemaphore_t canStartMutexBuffer;
 
 /* Private functions */
 static void systemTask(void *arg);
@@ -74,7 +80,7 @@ static void systemTask(void *arg);
 /* Public functions */
 void systemLaunch(void)
 {
-    xTaskCreate(systemTask, SYSTEM_TASK_NAME, SYSTEM_TASK_STACKSIZE, NULL, SYSTEM_TASK_PRI, NULL);
+  STATIC_MEM_TASK_CREATE(systemTask, systemTask, SYSTEM_TASK_NAME, NULL, SYSTEM_TASK_PRI);
 }
 
 // This must be the first module to be initialized!
@@ -87,7 +93,7 @@ void systemInit(void)
     DEBUG_PRINT_LOCAL("----------------------------\n");
     DEBUG_PRINT_LOCAL("%s is up and running!\n", platformConfigGetDeviceTypeName());
 
-    canStartMutex = xSemaphoreCreateMutex();
+    canStartMutex = xSemaphoreCreateMutexStatic(&canStartMutexBuffer);
     xSemaphoreTake(canStartMutex, portMAX_DELAY);
 
     wifilinkInit();
@@ -250,6 +256,25 @@ bool systemCanFly(void)
     return canFly;
 }
 
+//TODO:watchdog disable now
+// void vApplicationIdleHook( void )
+// {
+//   static uint32_t tickOfLatestWatchdogReset = M2T(0);
+
+//   portTickType tickCount = xTaskGetTickCount();
+
+//   if (tickCount - tickOfLatestWatchdogReset > M2T(WATCHDOG_RESET_PERIOD_MS))
+//   {
+//     tickOfLatestWatchdogReset = tickCount;
+//     watchdogReset();
+//   }
+
+//   // Enter sleep mode. Does not work when debugging chip with SWD.
+//   // Currently saves about 20mA STM32F405 current consumption (~30%).
+// #ifndef DEBUG
+//   { __asm volatile ("wfi"); }
+// #endif
+// }
 PARAM_GROUP_START(system)
 PARAM_ADD(PARAM_INT8, selftestPassed, &selftestPassed)
 PARAM_GROUP_STOP(sytem)

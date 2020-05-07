@@ -33,7 +33,6 @@
 #include "i2cdev.h"
 #include "zranger2.h"
 #include "vl53l1x.h"
-
 #include "cf_math.h"
 #define DEBUG_MODULE "ZR2"
 #include "debug_cf.h"

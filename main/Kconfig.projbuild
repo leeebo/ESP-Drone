@@ -20,6 +20,15 @@ menu "ESPlane2.0 config"
                 if ROLL error angle is 0.90,set this 90
     endmenu
 
+    menu "system"
+
+        config BASE_STACK_SIZE
+            int "base stack size for plane ralated task"
+            range 1024 2048
+            default 1024
+            
+    endmenu
+
     menu "sensors config"
         config I2C0_PIN_SDA
             int "I2C0_PIN_SDA GPIO number"
@@ -113,36 +122,6 @@ menu "ESPlane2.0 config"
                 GPIO number (IOxx) EXT01_PIN  
     endmenu      
 
-    menu "motors config"
-        config MOTOR01_PIN
-            int "MOTOR01_PIN GPIO number"
-            range 0 43
-            default 3
-            help
-                GPIO number (IOxx) MOTOR01_PIN
-
-        config MOTOR02_PIN
-            int "MOTOR02_PIN GPIO number"
-            range 0 43
-            default 4
-            help
-                GPIO number (IOxx) MOTOR02_PIN
-        
-        config MOTOR03_PIN
-            int "MOTOR03_PIN GPIO number"
-            range 0 43
-            default 5
-            help
-                GPIO number (IOxx) MOTOR03_PIN
-
-        config MOTOR04_PIN
-            int "MOTOR04_PIN GPIO number"
-            range 0 43
-            default 6
-            help
-                GPIO number (IOxx) MOTOR04_PIN        
-    endmenu 
-
     menu "led config"
         config LED_PIN_BLUE
             int "LED_PIN_BLUE GPIO number"
@@ -165,6 +144,8 @@ menu "ESPlane2.0 config"
             help
                 GPIO number (IOxx) LED_PIN_RED
 
-    endmenu 
+    endmenu
+
+    #source "${PROJECT_DIR}/components/motors/Kconfig" 
 
 endmenu

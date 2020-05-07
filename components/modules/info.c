@@ -33,6 +33,7 @@
 #include "version.h"
 #include "pm_esplane.h"
 #include "stm32_legacy.h"
+#include "static_mem.h"
 
 //CPUID access
 static const unsigned int *CpuId = (unsigned int *)0x1FFFF7E8;
@@ -59,118 +60,115 @@ typedef enum {
     warningBattery = 0x00
 } warningId;
 
-#define INFO_TASK_NAME
-#define INFO_TASK_STACKSIZE
-#define INFO_TASK_PRI
+STATIC_MEM_TASK_ALLOC(infoTask, INFO_TASK_STACKSIZE);
+
 void infoTask(void *param);
 
 void infoInit()
 {
-    // xTaskCreate(infoTask, INFO_TASK_NAME,
-    //             INFO_TASK_STACKSIZE, NULL, INFO_TASK_PRI, NULL);
-    // crtpInitTaskQueue(crtpInfo);
+  STATIC_MEM_TASK_CREATE(infoTask, infoTask, INFO_TASK_NAME, NULL, INFO_TASK_PRI);
+  crtpInitTaskQueue(crtpInfo);
 }
 
-// void infoTask(void *param)
-// {
-//   CRTPPacket p;
-//   int i;
-//   static int ctr=0;
+void infoTask(void *param)
+{
+  CRTPPacket p;
+  int i;
+  static int ctr=0;
 
-//   while (TRUE)
-//   {
-//     if (crtpReceivePacketWait(crtpInfo, &p, 1000) == pdTRUE)
-//     {
-//       InfoNbr infoNbr = CRTP_GET_NBR(p.port);
+  while (TRUE)
+  {
+    if (crtpReceivePacketWait(crtpInfo, &p, 1000) == pdTRUE)
+    {
+      InfoNbr infoNbr = CRTP_GET_NBR(p.port);
 
-//       switch (infoNbr)
-//       {
-//         case infoCopterNr:
-//           if (p.data[0] == infoName)
-//           {
-//             p.data[1] = 0x90;
-//             p.data[2] = 0x00;   //Version 0.9.0 (Crazyflie)
-//             strcpy((char*)&p.data[3], "CrazyFlie");
+      switch (infoNbr)
+      {
+        case infoCopterNr:
+          if (p.data[0] == infoName)
+          {
+            p.data[1] = 0x90;
+            p.data[2] = 0x00;   //Version 0.9.0 (Crazyflie)
+            strcpy((char*)&p.data[3], "CrazyFlie");
 
-//             p.size = 3+strlen("CrazyFlie");
-//             crtpSendPacket(&p);
-//           } else if (p.data[0] == infoVersion) {
-//             i=1;
+            p.size = 3+strlen("CrazyFlie");
+            crtpSendPacket(&p);
+          } else if (p.data[0] == infoVersion) {
+            i=1;
 
-//             strncpy((char*)&p.data[i], V_SLOCAL_REVISION, 31-i);
-//             i += strlen(V_SLOCAL_REVISION);
+            strncpy((char*)&p.data[i], V_SLOCAL_REVISION, 31-i);
+            i += strlen(V_SLOCAL_REVISION);
 
-//             if (i<31) p.data[i++] = ',';
+            if (i<31) p.data[i++] = ',';
 
-//             strncpy((char*)&p.data[i], V_SREVISION, 31-i);
-//             i += strlen(V_SREVISION);
+            strncpy((char*)&p.data[i], V_SREVISION, 31-i);
+            i += strlen(V_SREVISION);
 
-//             if (i<31) p.data[i++] = ',';
+            if (i<31) p.data[i++] = ',';
 
-//             strncpy((char*)&p.data[i], V_STAG, 31-i);
-//             i += strlen(V_STAG);
+            strncpy((char*)&p.data[i], V_STAG, 31-i);
+            i += strlen(V_STAG);
 
-//             if (i<31) p.data[i++] = ',';
-//             if (i<31) p.data[i++] = V_MODIFIED?'M':'C';
+            if (i<31) p.data[i++] = ',';
+            if (i<31) p.data[i++] = V_MODIFIED?'M':'C';
 
-//             p.size = (i<31)?i:31;
-//             crtpSendPacket(&p);
-//           } else if (p.data[0] == infoCpuId) {
-//             memcpy((char*)&p.data[1], (char*)CpuId, 12);
+            p.size = (i<31)?i:31;
+            crtpSendPacket(&p);
+          } else if (p.data[0] == infoCpuId) {
+            memcpy((char*)&p.data[1], (char*)CpuId, 12);
 
-//             p.size = 13;
-//             crtpSendPacket(&p);
-//           }
+            p.size = 13;
+            crtpSendPacket(&p);
+          }
 
-//           break;
-//         case infoBatteryNr:
-//           if (p.data[0] == batteryVoltage)
-//           {
-//             float value = pmGetBatteryVoltage();
+          break;
+        case infoBatteryNr:
+          if (p.data[0] == batteryVoltage)
+          {
+            float value = pmGetBatteryVoltage();
 
-//             memcpy(&p.data[1], (char*)&value, 4);
+            memcpy(&p.data[1], (char*)&value, 4);
 
-//             p.size = 5;
-//             crtpSendPacket(&p);
-//           } else if (p.data[0] == batteryMax) {
-//             float value = pmGetBatteryVoltageMax();
+            p.size = 5;
+            crtpSendPacket(&p);
+          } else if (p.data[0] == batteryMax) {
+            float value = pmGetBatteryVoltageMax();
 
-//             memcpy(&p.data[1], (char*)&value, 4);
+            memcpy(&p.data[1], (char*)&value, 4);
 
-//             p.size = 5;
-//             crtpSendPacket(&p);
-//           } else if (p.data[0] == batteryMin) {
-//             float value = pmGetBatteryVoltageMin();
+            p.size = 5;
+            crtpSendPacket(&p);
+          } else if (p.data[0] == batteryMin) {
+            float value = pmGetBatteryVoltageMin();
 
-//             memcpy(&p.data[1], (char*)&value, 4);
+            memcpy(&p.data[1], (char*)&value, 4);
 
-//             p.size = 5;
-//             crtpSendPacket(&p);
-//           }
-//           break;
-//         default:
-//           break;
-//       }
-//     }
+            p.size = 5;
+            crtpSendPacket(&p);
+          }
+          break;
+        default:
+          break;
+      }
+    }
 
-//     // Send a warning message if the battery voltage drops under 3.3V
-//     // This is sent every 5 info transaction or every 5 seconds
-//     if (ctr++>5) {
-//       ctr=0;
+    // Send a warning message if the battery voltage drops under 3.3V
+    // This is sent every 5 info transaction or every 5 seconds
+    if (ctr++>5) {
+      ctr=0;
 
-//       if (pmGetBatteryVoltageMin() < INFO_BAT_WARNING)
-//       {
-//         float value = pmGetBatteryVoltage();
+      if (pmGetBatteryVoltageMin() < INFO_BAT_WARNING)
+      {
+        float value = pmGetBatteryVoltage();
 
-//         p.port = CRTP_PORT(0,8,3);
-//         p.data[0] = 0;
-//         memcpy(&p.data[1], (char*)&value, 4);
+        p.port = CRTP_PORT(0,8,3);
+        p.data[0] = 0;
+        memcpy(&p.data[1], (char*)&value, 4);
 
-//         p.size = 5;
-//         crtpSendPacket(&p);
-//       }
-//     }
+        p.size = 5;
+        crtpSendPacket(&p);
+      }
+    }
 
-//   }
-// }
-
+  }
+}

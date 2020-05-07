@@ -32,6 +32,11 @@
 		"portmacro.h": "c",
 		"log.h": "c",
 		"cf_math.h": "c",
-		"event_groups.h": "c"
+		"event_groups.h": "c",
+		"power_distribution.h": "c",
+		"mem.h": "c",
+		"proximity.h": "c",
+		"controller_indi.h": "c",
+		"esp_spi_flash.h": "c"
 	},
 }

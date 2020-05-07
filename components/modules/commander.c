@@ -20,7 +20,6 @@
  *
  */
 #include <string.h>
-#define DEBUG_MODULE "COMMAND"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
@@ -29,31 +28,35 @@
 #include "crtp_commander.h"
 #include "crtp_commander_high_level.h"
 
+#include "cf_math.h"
 #include "param.h"
 #include "stm32_legacy.h"
-#include "debug_cf.h"
-
+#include "static_mem.h"
 
 static bool isInit;
 const static setpoint_t nullSetpoint;
+static setpoint_t tempSetpoint;
+static state_t lastState;
 const static int priorityDisable = COMMANDER_PRIORITY_DISABLE;
 
 static uint32_t lastUpdate;
 static bool enableHighLevel = false;
 
 static QueueHandle_t setpointQueue;
+STATIC_MEM_QUEUE_ALLOC(setpointQueue, 1, sizeof(setpoint_t));
 static QueueHandle_t priorityQueue;
+STATIC_MEM_QUEUE_ALLOC(priorityQueue, 1, sizeof(int));
 
 /* Public functions */
 void commanderInit(void)
 {
-    setpointQueue = xQueueCreate(1, sizeof(setpoint_t));
-    ASSERT(setpointQueue);
-    xQueueSend(setpointQueue, &nullSetpoint, 0);
+  setpointQueue = STATIC_MEM_QUEUE_CREATE(setpointQueue);
+  ASSERT(setpointQueue);
+  xQueueSend(setpointQueue, &nullSetpoint, 0);
 
-    priorityQueue = xQueueCreate(1, sizeof(int));
-    ASSERT(priorityQueue);
-    xQueueSend(priorityQueue, &priorityDisable, 0);
+  priorityQueue = STATIC_MEM_QUEUE_CREATE(priorityQueue);
+  ASSERT(priorityQueue);
+  xQueueSend(priorityQueue, &priorityDisable, 0);
 
     crtpCommanderInit();
     crtpCommanderHighLevelInit();
@@ -69,15 +72,28 @@ void commanderSetSetpoint(setpoint_t *setpoint, int priority)
     const BaseType_t peekResult = xQueuePeek(priorityQueue, &currentPriority, 0);
     ASSERT(peekResult == pdTRUE);
 
-    if (priority >= currentPriority) {
-        setpoint->timestamp = xTaskGetTickCount();
+  if (priority >= currentPriority) {
+    setpoint->timestamp = xTaskGetTickCount();
+    // This is a potential race but without effect on functionality
+    xQueueOverwrite(setpointQueue, setpoint);
+    xQueueOverwrite(priorityQueue, &priority);
+    // Send the high-level planner to idle so it will forget its current state
+    // and start over if we switch from low-level to high-level in the future.
+    crtpCommanderHighLevelStop();
+  }
+}
 
-        /* command step - receive  10 forward to setpointQueue, waitting for the command execution
-        *This is a potential race but without effect on functionality
-        */
-        xQueueOverwrite(setpointQueue, setpoint);
-        xQueueOverwrite(priorityQueue, &priority);
-    }
+void commanderNotifySetpointsStop(int remainValidMillisecs)
+{
+  uint32_t currentTime = xTaskGetTickCount();
+  int timeSetback = MIN(
+    COMMANDER_WDT_TIMEOUT_SHUTDOWN - M2T(remainValidMillisecs),
+    currentTime
+  );
+  xQueuePeek(setpointQueue, &tempSetpoint, 0);
+  tempSetpoint.timestamp = currentTime - timeSetback;
+  xQueueOverwrite(setpointQueue, &tempSetpoint);
+  crtpCommanderHighLevelTellState(&lastState);
 }
 
 void commanderGetSetpoint(setpoint_t *setpoint, const state_t *state)
