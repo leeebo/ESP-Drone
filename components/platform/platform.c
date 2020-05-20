@@ -23,7 +23,7 @@
 
 #include <string.h>
 
-#include "include/platform.h"
+#include "platform.h"
 #define DEBUG_MODULE "PLATFORM"
 #include "debug_cf.h"
 
