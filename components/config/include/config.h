@@ -69,7 +69,7 @@
 #endif
 
 
-#define DEBUG_UDP
+//#define DEBUG_UDP
 //#define DEBUG_EP2
 
 //#define BUZZER_ON
