@@ -144,7 +144,6 @@ static void udp_server_rx_task(void *pvParameters)
             DEBUG_PRINT_LOCAL("recvfrom failed: errno %d", errno);
             break;
         } else if(len > WIFI_RX_TX_PACKET_SIZE - 4) {
-        //TODO:
             DEBUG_PRINT_LOCAL("Received data length = %d > 64", len);
         } else {
             //copy part of the UDP packet
@@ -210,7 +209,6 @@ void wifiInit(void)
     ESP_ERROR_CHECK(esp_event_loop_create_default());
     ap_netif = esp_netif_create_default_wifi_ap();
     uint8_t mac[6];
-// static wifi_country_t wifi_country = {.cc = "JP", .schan = 1, .nchan = 14, .policy = WIFI_COUNTRY_POLICY_MANUAL};
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
@@ -221,7 +219,6 @@ void wifiInit(void)
                     NULL,
                     NULL));
 
-// ESP_ERROR_CHECK(esp_wifi_set_country(&wifi_country)); // set locales for RF and channels
     ESP_ERROR_CHECK(esp_wifi_get_mac(ESP_IF_WIFI_AP, mac));
     sprintf(WIFI_SSID, "ESPLANE_%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 
