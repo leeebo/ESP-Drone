@@ -197,7 +197,7 @@ void systemTask(void *arg)
   DEBUG_PRINTI("estimatorKalmanTaskTest = %d ", pass);
   //pass &= soundTest();
   pass &= memTest();
-  DEBUG_PRINTI("estimatorKalmanTaskTest = %d ", pass);
+  DEBUG_PRINTI("memTest = %d ", pass);
   //pass &= watchdogNormalStartTest();
 
   //Start the firmware

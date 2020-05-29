@@ -554,6 +554,7 @@ static void sensorsDeviceInit(void)
     sinPitch = sinf(PITCH_CALIB * (float)M_PI / 180);
     cosRoll = cosf(ROLL_CALIB * (float)M_PI / 180);
     sinRoll = sinf(ROLL_CALIB * (float)M_PI / 180);
+    DEBUG_PRINTI("pitch_calib = %f,roll_calib = %f",PITCH_CALIB,ROLL_CALIB);
 }
 
 static void sensorsSetupSlaveRead(void)
@@ -1037,7 +1038,6 @@ bool sensorsMpu6050Hmc5883lMs5611ManufacturingTest(void)
  */
 static void sensorsAccAlignToGravity(Axis3f *in, Axis3f *out)
 {
-    //TODO: need cosPitch calculate firstly
     Axis3f rx;
     Axis3f ry;
 
