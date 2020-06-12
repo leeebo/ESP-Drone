@@ -1,6 +1,6 @@
 /**
 *
- * ESPlane Firmware
+ * ESP-Drone Firmware
  *
  * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2018 Bitcraze AB
@@ -33,14 +33,14 @@ static platformConfig_t configs[] = {
 
     {
         .deviceType = "EP20",
-        .deviceTypeName = "ESPlane 2.0 With ESP32",
+        .deviceTypeName = "ESPlane 2.0 ",
         .sensorImplementation = SensorImplementation_mpu6050_HMC5883L_MS5611,
         .physicalLayoutAntennasAreClose = false,
         .motorMap = motorMapDefaultBrushed,
     },
     {
-        .deviceType = "EP30",
-        .deviceTypeName = "ESPlane 3.0 With ESP32-s2",
+        .deviceType = "ED12",
+        .deviceTypeName = "ESP_Drone_v1_2",
         .sensorImplementation = SensorImplementation_mpu6050_HMC5883L_MS5611,
         .physicalLayoutAntennasAreClose = false,
         .motorMap = motorMapDefaultBrushed,
@@ -64,5 +64,5 @@ bool platformInitHardware()
 
 const char *platformConfigGetPlatformName()
 {
-    return "EP20";
+    return "ED12";
 }

@@ -1,6 +1,6 @@
 /**
  *
- * ESPlane Firmware
+ * ESP-Drone Firmware
  *
  * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2018 Bitcraze AB
@@ -23,7 +23,7 @@
 
 #include <string.h>
 
-#include "include/platform.h"
+#include "platform.h"
 #define DEBUG_MODULE "PLATFORM"
 #include "debug_cf.h"
 

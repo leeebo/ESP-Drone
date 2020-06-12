@@ -1,6 +1,6 @@
 /**
 *
- * ESPlane Firmware
+ * ESP-Drone Firmware
  * 
  * Copyright 2019-2020  Espressif Systems (Shanghai) 
  * Copyright (C) 2011-2012 Bitcraze AB
@@ -116,8 +116,9 @@ int configblockInit(void)
 {
   if(isInit)
     return 0;
-  //i2cdevInit(I2C1_DEV);
-  eepromInit(I2C1_DEV); //I2C1_DEV);
+
+  i2cdevInit(I2C1_DEV);
+  eepromInit(I2C1_DEV);
 
   // Because of strange behavior from I2C device during expansion port test
   // the first read needs to be discarded
