@@ -25,7 +25,7 @@
 static struct sockaddr_in6 source_addr; // Large enough for both IPv4 or IPv6
 
 //#define WIFI_SSID      "Udp Server"
-static char WIFI_SSID[32] = "ESPLANE";
+static char WIFI_SSID[32] = "ESP-DRONE";
 static char WIFI_PWD[64] = "12345678" ;
 #define MAX_STA_CONN (1)
 
@@ -43,6 +43,7 @@ static UDPPacket outPacket;
 
 static bool isInit = false;
 static bool isUDPInit = false;
+static bool isUDPConnected = false;
 
 static esp_err_t udp_server_create(void *arg);
 
@@ -155,6 +156,7 @@ static void udp_server_rx_task(void *pvParameters)
             //check packet
             if (cksum == calculate_cksum(inPacket.data, len - 1)){
                 xQueueSend(udpDataRx, &inPacket, M2T(2));
+                if(!isUDPConnected) isUDPConnected = true;
             }else{
                 DEBUG_PRINT_LOCAL("udp packet cksum unmatched");
             }
@@ -177,7 +179,7 @@ static void udp_server_tx_task(void *pvParameters)
             vTaskDelay(20);
             continue;
         }
-        if (xQueueReceive(udpDataTx, &outPacket, 5) == pdTRUE) {
+        if ((xQueueReceive(udpDataTx, &outPacket, 5) == pdTRUE) && isUDPConnected) {           
             memcpy(tx_buffer, outPacket.data, outPacket.size);       
             tx_buffer[outPacket.size] =  calculate_cksum(tx_buffer, outPacket.size);
             tx_buffer[outPacket.size + 1] = 0;
@@ -220,7 +222,7 @@ void wifiInit(void)
                     NULL));
 
     ESP_ERROR_CHECK(esp_wifi_get_mac(ESP_IF_WIFI_AP, mac));
-    sprintf(WIFI_SSID, "ESPLANE_%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    sprintf(WIFI_SSID, "ESP-DRONE_%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 
     wifi_config_t wifi_config;
     memcpy(wifi_config.ap.ssid, WIFI_SSID, strlen(WIFI_SSID) + 1) ;
@@ -252,7 +254,7 @@ void wifiInit(void)
     // This should probably be reduced to a CRTP packet size
     udpDataRx = xQueueCreate(5, sizeof(UDPPacket)); /* Buffer packets (max 64 bytes) */
     DEBUG_QUEUE_MONITOR_REGISTER(udpDataRx);
-    udpDataTx = xQueueCreate(1, sizeof(UDPPacket)); /* Buffer packets (max 64 bytes) */
+    udpDataTx = xQueueCreate(5, sizeof(UDPPacket)); /* Buffer packets (max 64 bytes) */
     DEBUG_QUEUE_MONITOR_REGISTER(udpDataTx);
     if (udp_server_create(NULL) == ESP_FAIL) {
         DEBUG_PRINT_LOCAL("UDP server create socket failed!!!");

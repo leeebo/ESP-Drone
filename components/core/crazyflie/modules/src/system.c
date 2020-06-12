@@ -5,7 +5,7 @@
  * +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
  *  ||  ||    /_____/_/\__/\___/_/   \__,_/ /___/\___/
  *
- * ESPlane Firmware
+ * ESP-Drone Firmware
  *
  * Copyright 2019-2020  Espressif Systems (Shanghai)
  * Copyright (C) 2011-2012 Bitcraze AB
@@ -131,9 +131,9 @@ bool systemTest()
 
   pass &= ledseqTest();
   pass &= pmTest();
-  DEBUG_PRINTD("pmTest = %d", pass);
+  DEBUG_PRINTI("pmTest = %d", pass);
   pass &= workerTest();
-  DEBUG_PRINTD("workerTest = %d", pass);
+  DEBUG_PRINTI("workerTest = %d", pass);
   //pass &= buzzerTest();
   return pass;
 }
